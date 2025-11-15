@@ -1,0 +1,7016 @@
+<template>
+  <div id="app">
+    <!-- Khoảng trống 1cm trước header -->
+    <div class="header-spacer"></div>
+
+    <!-- Nút Lên đầu trang -->
+    <button
+      v-show="showScrollTop"
+      @click="scrollToTop"
+      class="scroll-to-top"
+      :style="{ top: scrollTopPosition + 'px' }"
+    >
+      ↑
+    </button>
+
+    <!-- Header mới với tông màu hồng lung linh - Chỉ thanh hồng -->
+    <header class="header"></header>
+
+    <!-- Logo và Tiêu đề nằm dưới header, canh giữa -->
+    <div class="logo-title-section">
+      <div class="logo-container-center">
+        <img
+          src="/logo-agribank1.png"
+          alt="Agribank Logo"
+          class="logo-center"
+        />
+      </div>
+      <div class="title-section-center">
+        <h1 class="main-title-center">CHƯƠNG TRÌNH ĐÁNH GIÁ RỦI RO TÍN DỤNG</h1>
+        <h2 class="sub-title-center">Trí Tuệ Nhân Tạo trong Dự báo Rủi Ro Tín Dụng KH Doanh Nghiệp</h2>
+      </div>
+    </div>
+
+    <!-- Divider sau logo và tiêu đề -->
+    <div class="title-divider"></div>
+
+    <!-- ✅ TAB SYSTEM - Thay thế Sidebar -->
+    <div class="tabs-container">
+      <button
+        @click="activeTab = 'predict'"
+        class="tab-button"
+        :class="{ active: activeTab === 'predict' }"
+      >
+        🔮 Dự Báo PD
+      </button>
+      <button
+        @click="activeTab = 'dashboard'"
+        class="tab-button"
+        :class="{ active: activeTab === 'dashboard' }"
+      >
+        📊 Dashboard Tài Chính
+      </button>
+      <button
+        @click="activeTab = 'scenario'"
+        class="tab-button"
+        :class="{ active: activeTab === 'scenario' }"
+      >
+        ⚠️ Mô phỏng kịch bản xấu
+      </button>
+      <button
+        @click="activeTab = 'macro'"
+        class="tab-button"
+        :class="{ active: activeTab === 'macro' }"
+      >
+        📊 Mô phỏng Vĩ mô
+      </button>
+      <div class="tab-button-wrapper"
+        @mouseenter="showTrainDropdown = true"
+        @mouseleave="showTrainDropdown = false">
+        <button
+          @click="activeTab = 'train'"
+          class="tab-button"
+          :class="{ active: activeTab === 'train' }"
+        >
+          📚 Huấn luyện mô hình ▾
+        </button>
+        <div v-if="showTrainDropdown" class="train-dropdown">
+          <div class="dropdown-item" @click="activeTab = 'train'; trainSubTab = 'pd'">
+            🔮 Dự báo PD
+          </div>
+          <div class="dropdown-item" @click="activeTab = 'train'; trainSubTab = 'early-warning'">
+            ⚠️ Cảnh báo rủi ro sớm
+          </div>
+          <div class="dropdown-item" @click="activeTab = 'train'; trainSubTab = 'anomaly'">
+            🚨 Phát hiện gian lận
+          </div>
+          <div class="dropdown-item" @click="activeTab = 'train'; trainSubTab = 'survival'">
+            ⏳ Phân tích sống sót
+          </div>
+          <div class="dropdown-item" @click="activeTab = 'train'; trainSubTab = 'all'">
+            🚀 Huấn luyện tất cả
+          </div>
+        </div>
+      </div>
+      <button
+        @click="activeTab = 'early-warning'"
+        class="tab-button"
+        :class="{ active: activeTab === 'early-warning' }"
+      >
+        ⚠️ Cảnh báo Rủi ro Sớm
+      </button>
+      <button
+        @click="activeTab = 'anomaly'"
+        class="tab-button"
+        :class="{ active: activeTab === 'anomaly' }"
+      >
+        🚨 Phát hiện Gian lận
+      </button>
+      <button
+        @click="activeTab = 'survival'"
+        class="tab-button"
+        :class="{ active: activeTab === 'survival' }"
+      >
+        ⏳ Phân tích Sống sót
+      </button>
+      <button
+        @click="activeTab = 'authors'"
+        class="tab-button"
+        :class="{ active: activeTab === 'authors' }"
+      >
+        👥 Nhóm Tác giả
+      </button>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+      <!-- ✅ TAB CONTENT: Dự Báo PD -->
+      <div v-if="activeTab === 'predict'" class="tab-content">
+        <div class="card">
+          <h2 class="card-title">🔮 Dự báo PD & Phân tích AI cho Hồ sơ mới</h2>
+
+          <!-- Ghi chú hướng dẫn -->
+          <div class="info-note">
+            <span class="note-icon">📝</span>
+            <span class="note-text">
+              <strong>Mục đích:</strong> Dự báo xác suất vỡ nợ (PD) của doanh nghiệp bằng mô hình Stacking Ensemble kết hợp Logistic Regression, Random Forest và XGBoost.
+              <br><strong>Lưu ý:</strong> Vui lòng huấn luyện mô hình ở Tab "Huấn luyện mô hình" trước khi sử dụng tính năng này.
+              <br><strong>Cách sử dụng:</strong>
+              <strong>Bước 1:</strong> Upload file XLSX (có 3 sheets: CDKT, BCTN, LCTT) →
+              <strong>Bước 2:</strong> Xem kết quả dự báo PD và 14 chỉ số tài chính →
+              <strong>Bước 3:</strong> Phân tích chuyên sâu bằng AI.
+            </span>
+          </div>
+
+        <!-- Upload XLSX File -->
+        <div style="margin-bottom: 2rem;">
+          <div class="upload-area" @click="$refs.xlsxFileInput.click()">
+            <div class="upload-icon">📊</div>
+            <p class="upload-text">{{ xlsxFileName || 'Tải lên file XLSX của doanh nghiệp' }}</p>
+            <p class="upload-hint">
+              File XLSX phải có 3 sheets: CDKT (Cân đối kế toán), BCTN (Báo cáo thu nhập), LCTT (Lưu chuyển tiền tệ)
+            </p>
+          </div>
+          <input
+            ref="xlsxFileInput"
+            type="file"
+            accept=".xlsx,.xls"
+            @change="handleXlsxFile"
+            style="display: none"
+          />
+          <button
+            @click="predictFromXlsx"
+            class="btn btn-primary"
+            :disabled="!xlsxFile || isPredicting"
+            style="margin-top: 1rem; width: 100%;"
+          >
+            {{ isPredicting ? '⏳ Đang tính toán...' : '🎯 Tính toán 14 chỉ số và Dự báo PD' }}
+          </button>
+        </div>
+
+        <!-- Results Section -->
+        <div v-if="predictionResult">
+          <!-- 14 Chỉ số tài chính - 2 bảng nằm ngang -->
+          <div style="margin: 3rem 0;">
+            <h3 style="margin-bottom: 1.5rem; color: #FF6B9D; text-align: center; font-size: 1.6rem;">
+              📈 14 Chỉ số Tài chính đã tính toán
+            </h3>
+            <div class="indicators-tables-container">
+              <!-- Bảng 1: X1-X7 -->
+              <div class="indicators-table-wrapper">
+                <h4 class="table-subtitle">Nhóm 1: Sinh lời & Thanh toán (X1-X7)</h4>
+                <table class="indicators-table">
+                  <thead>
+                    <tr>
+                      <th>Chỉ số</th>
+                      <th>Giá trị</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="indicator in indicators.slice(0, 7)" :key="indicator.code">
+                      <td>
+                        <div class="indicator-code-cell">{{ indicator.code }}</div>
+                        <div class="indicator-name-cell">{{ indicator.name }}</div>
+                      </td>
+                      <td class="indicator-value-cell">{{ indicator.value.toFixed(4) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Bảng 2: X8-X14 -->
+              <div class="indicators-table-wrapper">
+                <h4 class="table-subtitle">Nhóm 2: Hiệu quả hoạt động (X8-X14)</h4>
+                <table class="indicators-table">
+                  <thead>
+                    <tr>
+                      <th>Chỉ số</th>
+                      <th>Giá trị</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="indicator in indicators.slice(7, 14)" :key="indicator.code">
+                      <td>
+                        <div class="indicator-code-cell">{{ indicator.code }}</div>
+                        <div class="indicator-name-cell">{{ indicator.name }}</div>
+                      </td>
+                      <td class="indicator-value-cell">{{ indicator.value.toFixed(4) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dashboard Biểu đồ 14 chỉ số -->
+          <div style="margin: 3rem 0;">
+            <IndicatorsChart v-if="indicatorsDict" :indicators="indicatorsDict" />
+          </div>
+
+          <!-- PD Results - 3 mô hình con trước, Stacking nổi bật ở dưới -->
+          <div style="margin: 3rem 0;">
+            <h3 style="margin-bottom: 1.5rem; color: #FF6B9D; text-align: center; font-size: 1.6rem;">
+              🎯 Kết quả Dự báo Xác suất Vỡ nợ (PD)
+            </h3>
+
+            <!-- 3 mô hình con -->
+            <div style="margin-bottom: 1rem;">
+              <h4 style="color: #7A7A7A; font-size: 1.1rem; margin-bottom: 1rem; text-align: center;">
+                📊 Kết quả từ 3 Mô hình Cơ sở
+              </h4>
+              <div class="pd-grid-base-models">
+                <div
+                  class="pd-card pd-card-base"
+                  :class="getRiskClass(predictionResult.pd_logistic)"
+                >
+                  <div class="pd-label">📈 Logistic Regression</div>
+                  <div class="pd-value">{{ (predictionResult.pd_logistic * 100).toFixed(2) }}%</div>
+                  <div class="pd-status">{{ getRiskLabel(predictionResult.pd_logistic) }}</div>
+                </div>
+
+                <div
+                  class="pd-card pd-card-base"
+                  :class="getRiskClass(predictionResult.pd_random_forest)"
+                >
+                  <div class="pd-label">🌳 Random Forest</div>
+                  <div class="pd-value">{{ (predictionResult.pd_random_forest * 100).toFixed(2) }}%</div>
+                  <div class="pd-status">{{ getRiskLabel(predictionResult.pd_random_forest) }}</div>
+                </div>
+
+                <div
+                  class="pd-card pd-card-base"
+                  :class="getRiskClass(predictionResult.pd_xgboost)"
+                >
+                  <div class="pd-label">⚡ XGBoost</div>
+                  <div class="pd-value">{{ (predictionResult.pd_xgboost * 100).toFixed(2) }}%</div>
+                  <div class="pd-status">{{ getRiskLabel(predictionResult.pd_xgboost) }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stacking - Kết quả chính nổi bật -->
+            <div style="margin-top: 2.5rem;">
+              <h4 style="color: #FF6B9D; font-size: 1.3rem; margin-bottom: 1rem; text-align: center; font-weight: 700;">
+                ⭐ KẾT QUẢ CUỐI CÙNG - Mô hình Stacking Ensemble ⭐
+              </h4>
+              <div class="pd-stacking-container">
+                <div
+                  class="pd-card pd-card-stacking"
+                  :class="getRiskClass(predictionResult.pd_stacking)"
+                >
+                  <div class="pd-label-stacking">🎯 PD - Stacking</div>
+                  <div class="pd-value-stacking">{{ (predictionResult.pd_stacking * 100).toFixed(2) }}%</div>
+                  <div class="pd-status-stacking">{{ getRiskLabel(predictionResult.pd_stacking) }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chart so sánh PD -->
+            <div class="chart-container" style="margin-top: 2rem;">
+              <RiskChart :prediction="predictionResult" />
+            </div>
+          </div>
+
+          <!-- Gemini Analysis Section -->
+          <div style="margin: 3rem 0;">
+            <button
+              @click="analyzeWithGemini"
+              class="btn btn-primary"
+              :disabled="isAnalyzing"
+              style="width: 100%;"
+            >
+              {{ isAnalyzing ? '⏳ Đang phân tích...' : '🤖 Phân tích chuyên sâu bằng AI' }}
+            </button>
+
+            <div v-if="geminiAnalysis" class="analysis-box">
+              <h3 style="margin-bottom: 1rem; color: #FF6B9D; font-size: 1.4rem;">
+                🧠 Phân tích & Khuyến nghị từ AI
+              </h3>
+
+              <!-- Quyết định cuối cùng CHO VAY / KHÔNG CHO VAY -->
+              <div class="lending-decision" :class="getLendingDecisionClass()">
+                <div class="decision-icon">{{ getLendingDecisionIcon() }}</div>
+                <div class="decision-text">{{ getLendingDecisionText() }}</div>
+              </div>
+
+              <div class="analysis-content">{{ geminiAnalysis }}</div>
+            </div>
+
+            <!-- Nút Phân tích sâu kết hợp Bối cảnh ngành -->
+            <div style="margin-top: 2rem; text-align: center;">
+              <button
+                @click="goToPdIndustryTab"
+                class="btn btn-accent"
+                style="padding: 0.8rem 2rem; font-size: 1rem;"
+              >
+                🎯 Phân tích sâu kết hợp Bối cảnh ngành
+              </button>
+            </div>
+          </div>
+
+          <!-- Export Report Button -->
+          <div v-if="geminiAnalysis" style="margin: 2rem 0; text-align: center;">
+            <button
+              @click="exportReport"
+              class="btn btn-secondary"
+              :disabled="isExporting"
+              style="padding: 1rem 3rem; font-size: 1.1rem;"
+            >
+              {{ isExporting ? '⏳ Đang xuất báo cáo...' : '📄 Xuất Báo cáo Word' }}
+            </button>
+          </div>
+
+          <!-- Chatbot Trigger - Hiện sau khi có phân tích -->
+          <div v-if="geminiAnalysis && !showChatbot" class="chatbot-trigger">
+            <div class="pointer-hand">👉</div>
+            <div class="trigger-text" @click="openChatbot">Hỏi thêm chi tiết tại đây...</div>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <!-- Chatbot Component -->
+      <div v-if="showChatbot" class="chatbot-container">
+        <div class="chatbot-header">
+          <div class="chatbot-title">
+            <span class="chatbot-icon">🤖</span>
+            <span>Trợ lý ảo Agribank</span>
+          </div>
+          <button @click="closeChatbot" class="chatbot-close">✕</button>
+        </div>
+        <div class="chatbot-messages">
+          <div v-if="chatMessages.length === 0" class="chatbot-welcome">
+            <p>👋 Xin chào! Tôi là Trợ lý ảo Agribank.</p>
+            <p>Bạn có thể hỏi thêm về phân tích vừa rồi.</p>
+          </div>
+          <div
+            v-for="(message, index) in chatMessages"
+            :key="index"
+            class="chat-message"
+            :class="{ 'user-message': message.role === 'user', 'assistant-message': message.role === 'assistant' }"
+          >
+            {{ message.content }}
+          </div>
+          <div v-if="isChatLoading" class="chat-loading">
+            <span class="loading-dot"></span>
+            <span class="loading-dot"></span>
+            <span class="loading-dot"></span>
+          </div>
+        </div>
+        <div class="chatbot-input">
+          <input
+            v-model="chatInput"
+            @keyup.enter="sendChatMessage"
+            type="text"
+            placeholder="Nhập câu hỏi của bạn..."
+            class="chat-input-field"
+          />
+          <button @click="sendChatMessage" class="chat-send-button" :disabled="!chatInput.trim() || isChatLoading">
+            ➤
+          </button>
+        </div>
+      </div>
+
+      <!-- ✅ TAB CONTENT: Dashboard Tài Chính -->
+      <div v-if="activeTab === 'dashboard'" class="tab-content">
+        <div class="card">
+          <h2 class="card-title">📊 Dashboard Tài Chính - Phân tích Ngành nghề</h2>
+
+          <!-- Sub-tabs cho Dashboard -->
+          <div class="sub-tabs-container" style="margin: 1.5rem 0;">
+            <button
+              @click="dashboardSubTab = 'industry'"
+              class="sub-tab-button"
+              :class="{ active: dashboardSubTab === 'industry' }"
+            >
+              📈 Phân tích Ngành
+            </button>
+            <button
+              @click="dashboardSubTab = 'pd-industry'"
+              class="sub-tab-button"
+              :class="{ active: dashboardSubTab === 'pd-industry' }"
+            >
+              🎯 Kết hợp Phân tích PD chuyên sâu
+            </button>
+          </div>
+
+          <!-- SUB-TAB 1: Phân tích Ngành (GIỮ NGUYÊN) -->
+          <div v-if="dashboardSubTab === 'industry'">
+            <!-- Bảng mô tả và hướng dẫn sử dụng -->
+            <div class="dashboard-guide">
+              <h3 style="color: #FF6B9D; font-size: 1.1rem; margin-bottom: 0.8rem;">
+                📋 Giới thiệu Dashboard
+              </h3>
+              <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+                Dashboard Tài Chính giúp bạn phân tích xu hướng và dữ liệu kinh tế theo từng ngành nghề tại Việt Nam.
+                Hệ thống sử dụng AI (Gemini) để thu thập, phân tích dữ liệu mới nhất và đưa ra khuyến nghị cho quyết định tín dụng.
+              </p>
+              <div class="guide-steps">
+                <div class="guide-step">
+                  <span class="step-number">1</span>
+                  <span class="step-text">Chọn ngành nghề muốn phân tích</span>
+                </div>
+                <div class="guide-step">
+                  <span class="step-number">2</span>
+                  <span class="step-text">Nhấn "🔄 AI Lấy dữ liệu" để thu thập thông tin mới nhất</span>
+                </div>
+                <div class="guide-step">
+                  <span class="step-number">3</span>
+                  <span class="step-text">Nhấn "📊 Xem biểu đồ" để hiển thị dữ liệu trực quan + phân tích sơ bộ</span>
+                </div>
+                <div class="guide-step">
+                  <span class="step-number">4</span>
+                  <span class="step-text">Nhấn "🔍 Phân tích sâu" để AI đánh giá ảnh hưởng đến quyết định cho vay</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dropdown chọn ngành -->
+            <div style="margin: 2rem 0;">
+              <label class="input-label" style="font-size: 1rem; margin-bottom: 0.8rem;">
+                🏢 Chọn ngành nghề để phân tích:
+              </label>
+              <select
+                v-model="selectedIndustry"
+                class="input-field"
+                style="font-size: 1rem; padding: 0.8rem;"
+              >
+                <option value="">-- Chọn ngành nghề --</option>
+                <option value="overview">📈 Tổng quan Kinh tế Việt Nam</option>
+                <option value="agriculture">🌾 Nông nghiệp</option>
+                <option value="forestry">🌲 Lâm nghiệp</option>
+                <option value="fishing">🐟 Thủy sản</option>
+                <option value="manufacturing">🏭 Sản xuất công nghiệp</option>
+                <option value="processing">⚙️ Chế biến</option>
+                <option value="construction">🏗️ Xây dựng</option>
+                <option value="realestate">🏘️ Bất động sản</option>
+                <option value="retail">🛒 Bán lẻ</option>
+                <option value="wholesale">📦 Bán sỉ</option>
+                <option value="trading">💼 Thương mại</option>
+                <option value="finance">🏦 Tài chính</option>
+                <option value="banking">🏧 Ngân hàng</option>
+                <option value="insurance">🛡️ Bảo hiểm</option>
+                <option value="technology">💻 Công nghệ Thông tin</option>
+                <option value="software">📱 Phần mềm</option>
+                <option value="transportation">🚚 Vận tải</option>
+                <option value="logistics">📮 Logistics</option>
+                <option value="tourism">✈️ Du lịch</option>
+                <option value="hospitality">🏨 Khách sạn - Nhà hàng</option>
+                <option value="services">🎯 Dịch vụ</option>
+                <option value="healthcare">🏥 Y tế</option>
+                <option value="pharmaceutical">💊 Dược phẩm</option>
+                <option value="energy">⚡ Năng lượng</option>
+                <option value="electricity">🔌 Điện lực</option>
+                <option value="mining">⛏️ Khai khoáng</option>
+                <option value="education">🎓 Giáo dục</option>
+                <option value="media">📺 Truyền thông</option>
+                <option value="textile">👔 Dệt may</option>
+                <option value="food">🍔 Thực phẩm & Đồ uống</option>
+              </select>
+            </div>
+
+            <!-- Các nút chức năng theo luồng -->
+            <div v-if="selectedIndustry" class="dashboard-actions">
+              <button
+                @click="fetchIndustryData"
+                class="btn btn-primary"
+                :disabled="isFetchingData"
+                style="width: 100%; margin-bottom: 1rem;"
+              >
+                {{ isFetchingData ? '⏳ Đang lấy dữ liệu...' : '🔄 AI Lấy dữ liệu tự động' }}
+              </button>
+
+              <button
+                @click="showCharts"
+                class="btn btn-secondary"
+                :disabled="!industryData || isShowingCharts"
+                style="width: 100%; margin-bottom: 1rem;"
+              >
+                {{ isShowingCharts ? '⏳ Đang tạo biểu đồ...' : '📊 Xem biểu đồ & Phân tích sơ bộ' }}
+              </button>
+
+              <button
+                @click="deepAnalyze"
+                class="btn btn-accent"
+                :disabled="!chartsData || isDeepAnalyzing"
+                style="width: 100%;"
+              >
+                {{ isDeepAnalyzing ? '⏳ Đang phân tích sâu...' : '🔍 Phân tích sâu - Đánh giá tín dụng' }}
+              </button>
+            </div>
+
+            <!-- Kết quả: Hiển thị biểu đồ -->
+            <div v-if="chartsData" class="charts-section" style="margin-top: 2rem;">
+              <h3 style="color: #FF6B9D; font-size: 1.3rem; margin-bottom: 1rem; text-align: center;">
+                📊 Biểu đồ dữ liệu: {{ getIndustryName(selectedIndustry) }}
+              </h3>
+              <div id="industry-charts-container" style="width: 100%; min-height: 400px;"></div>
+
+              <div v-if="briefAnalysis" class="analysis-box" style="margin-top: 1.5rem;">
+                <h4 style="color: #FF6B9D; font-size: 1.1rem; margin-bottom: 1rem;">
+                  🤖 Phân tích sơ bộ từ AI
+                </h4>
+                <div class="analysis-content" style="font-size: 0.95rem; line-height: 1.7;">
+                  {{ briefAnalysis }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Kết quả: Phân tích sâu -->
+            <div v-if="deepAnalysisResult" class="deep-analysis-section" style="margin-top: 2rem;">
+              <div class="analysis-box" style="border: 3px solid #FF6B9D;">
+                <h3 style="color: #FF1493; font-size: 1.4rem; margin-bottom: 1.5rem; text-align: center; font-weight: 900;">
+                  🎯 Phân tích sâu - Đánh giá tín dụng
+                </h3>
+                <div class="analysis-content" style="font-size: 1rem; line-height: 1.8; font-weight: 600;">
+                  {{ deepAnalysisResult }}
+                </div>
+              </div>
+
+              <!-- Chatbot Trigger cho sub-tab Phân tích Ngành -->
+              <div v-if="!showDashboardChatbot" class="chatbot-trigger" style="margin-top: 1.5rem;">
+                <div class="pointer-hand">👉</div>
+                <div class="trigger-text" @click="openDashboardChatbot">Hỏi thêm chi tiết về phân tích ngành tại đây...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-TAB 2: Kết hợp Phân tích PD chuyên sâu (MỚI) -->
+          <div v-if="dashboardSubTab === 'pd-industry'">
+            <!-- Hướng dẫn sử dụng -->
+            <div class="dashboard-guide" style="margin-bottom: 2rem;">
+              <h3 style="color: #9C27B0; font-size: 1.1rem; margin-bottom: 0.8rem;">
+                🎯 Giới thiệu Phân tích PD kết hợp Ngành nghề
+              </h3>
+              <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+                Tính năng này cho phép phân tích chuyên sâu 14 chỉ số tài chính của doanh nghiệp kết hợp với đặc thù ngành nghề,
+                giúp đưa ra khuyến nghị cho vay chính xác hơn.
+              </p>
+              <div class="guide-steps">
+                <div class="guide-step">
+                  <span class="step-number">1</span>
+                  <span class="step-text">Chọn ngành nghề của doanh nghiệp</span>
+                </div>
+                <div class="guide-step">
+                  <span class="step-number">2</span>
+                  <span class="step-text">Chọn nguồn chỉ số: từ Tab Dự báo hoặc tải file mới</span>
+                </div>
+                <div class="guide-step">
+                  <span class="step-number">3</span>
+                  <span class="step-text">Nhấn "Phân tích" để xem kết quả và biểu đồ</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chọn ngành nghề -->
+            <div style="margin: 1.5rem 0;">
+              <label class="input-label" style="font-size: 1rem; margin-bottom: 0.8rem;">
+                🏢 Chọn ngành nghề của doanh nghiệp:
+              </label>
+              <select
+                v-model="pdIndustrySelected"
+                class="input-field"
+                style="font-size: 1rem; padding: 0.8rem;"
+              >
+                <option value="">-- Chọn ngành nghề --</option>
+                <option value="agriculture">🌾 Nông nghiệp</option>
+                <option value="forestry">🌲 Lâm nghiệp</option>
+                <option value="fishing">🐟 Thủy sản</option>
+                <option value="manufacturing">🏭 Sản xuất công nghiệp</option>
+                <option value="processing">⚙️ Chế biến</option>
+                <option value="construction">🏗️ Xây dựng</option>
+                <option value="realestate">🏘️ Bất động sản</option>
+                <option value="retail">🛒 Bán lẻ</option>
+                <option value="wholesale">📦 Bán sỉ</option>
+                <option value="trading">💼 Thương mại</option>
+                <option value="finance">🏦 Tài chính</option>
+                <option value="banking">🏧 Ngân hàng</option>
+                <option value="insurance">🛡️ Bảo hiểm</option>
+                <option value="technology">💻 Công nghệ Thông tin</option>
+                <option value="software">📱 Phần mềm</option>
+                <option value="transportation">🚚 Vận tải</option>
+                <option value="logistics">📮 Logistics</option>
+                <option value="tourism">✈️ Du lịch</option>
+                <option value="hospitality">🏨 Khách sạn - Nhà hàng</option>
+                <option value="services">🎯 Dịch vụ</option>
+                <option value="healthcare">🏥 Y tế</option>
+                <option value="pharmaceutical">💊 Dược phẩm</option>
+                <option value="energy">⚡ Năng lượng</option>
+                <option value="electricity">🔌 Điện lực</option>
+                <option value="mining">⛏️ Khai khoáng</option>
+                <option value="education">🎓 Giáo dục</option>
+                <option value="media">📺 Truyền thông</option>
+                <option value="textile">👔 Dệt may</option>
+                <option value="food">🍔 Thực phẩm & Đồ uống</option>
+              </select>
+            </div>
+
+            <!-- Radio buttons: Chọn nguồn chỉ số -->
+            <div v-if="pdIndustrySelected" style="margin: 1.5rem 0;">
+              <label class="input-label" style="font-size: 1rem; margin-bottom: 0.8rem;">
+                📊 Chọn nguồn chỉ số tài chính:
+              </label>
+              <div style="display: flex; gap: 1.5rem; margin-top: 1rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input
+                    type="radio"
+                    v-model="pdDataSource"
+                    value="from-predict"
+                    style="width: 18px; height: 18px; cursor: pointer;"
+                  />
+                  <span style="font-size: 0.95rem; font-weight: 600;">Lấy chỉ số từ Tab Dự Báo</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input
+                    type="radio"
+                    v-model="pdDataSource"
+                    value="new-file"
+                    style="width: 18px; height: 18px; cursor: pointer;"
+                  />
+                  <span style="font-size: 0.95rem; font-weight: 600;">Tải lên File mới để phân tích</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Upload file mới (nếu chọn "new-file") -->
+            <div v-if="pdDataSource === 'new-file'" style="margin: 1.5rem 0;">
+              <div class="upload-area" @click="$refs.pdXlsxFileInput.click()" style="padding: 1rem; min-height: 80px;">
+                <div class="upload-icon" style="font-size: 1.5rem;">📊</div>
+                <p class="upload-text">{{ pdXlsxFileName || 'Tải lên file XLSX của doanh nghiệp' }}</p>
+                <p class="upload-hint" style="font-size: 0.7rem;">
+                  File XLSX phải có 3 sheets: CDKT, BCTN, LCTT
+                </p>
+              </div>
+              <input
+                ref="pdXlsxFileInput"
+                type="file"
+                accept=".xlsx,.xls"
+                @change="handlePdXlsxFile"
+                style="display: none"
+              />
+            </div>
+
+            <!-- Nút phân tích -->
+            <div v-if="pdDataSource" style="margin: 1.5rem 0;">
+              <button
+                @click="analyzePdWithIndustry"
+                class="btn btn-accent"
+                :disabled="isAnalyzingPdIndustry || (pdDataSource === 'from-predict' && !indicatorsDict) || (pdDataSource === 'new-file' && !pdXlsxFile)"
+                style="width: 100%; padding: 1rem; font-size: 1.05rem;"
+              >
+                {{ isAnalyzingPdIndustry ? '⏳ Đang phân tích...' : '🎯 Phân tích PD kết hợp Ngành nghề' }}
+              </button>
+              <p v-if="pdDataSource === 'from-predict' && !indicatorsDict" style="color: #ff6b9d; text-align: center; margin-top: 0.5rem; font-size: 0.85rem;">
+                ⚠️ Vui lòng tải file và tính toán chỉ số ở Tab "Dự Báo PD" trước
+              </p>
+            </div>
+
+            <!-- Hiển thị 14 chỉ số (nhỏ gọn) -->
+            <div v-if="pdAnalysisIndicators" style="margin: 2rem 0;">
+              <h3 style="color: #9C27B0; font-size: 1.1rem; margin-bottom: 1rem; text-align: center;">
+                📈 14 Chỉ số Tài chính đã tính toán
+              </h3>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.8rem;">
+                <div v-for="(value, key) in pdAnalysisIndicators" :key="key"
+                     style="background: linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(233, 216, 253, 0.2) 100%);
+                            padding: 0.6rem; border-radius: 8px; border: 1px solid rgba(156, 39, 176, 0.2);">
+                  <div style="font-size: 0.75rem; font-weight: 700; color: #9C27B0; margin-bottom: 0.2rem;">{{ key }}</div>
+                  <div style="font-size: 0.85rem; font-weight: 600; color: #4A4A4A;">{{ value.toFixed(4) }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hiển thị biểu đồ -->
+            <div v-if="pdAnalysisCharts" class="charts-section" style="margin-top: 2rem;">
+              <h3 style="color: #9C27B0; font-size: 1.2rem; margin-bottom: 1rem; text-align: center;">
+                📊 Biểu đồ Phân tích Chỉ số
+              </h3>
+              <div id="pd-industry-charts-container" style="width: 100%; min-height: 400px;"></div>
+            </div>
+
+            <!-- Hiển thị phân tích từ Gemini -->
+            <div v-if="pdAnalysisResult" class="deep-analysis-section" style="margin-top: 2rem;">
+              <div class="analysis-box" style="border: 3px solid #9C27B0;">
+                <h3 style="color: #9C27B0; font-size: 1.3rem; margin-bottom: 1.5rem; text-align: center; font-weight: 900;">
+                  🎯 Phân tích PD kết hợp Ngành nghề
+                </h3>
+                <div class="analysis-content" style="font-size: 0.95rem; line-height: 1.7; font-weight: 600; white-space: pre-wrap;">
+                  {{ pdAnalysisResult }}
+                </div>
+              </div>
+
+              <!-- Chatbot Trigger cho sub-tab PD chuyên sâu -->
+              <div v-if="!showDashboardChatbot" class="chatbot-trigger" style="margin-top: 1.5rem;">
+                <div class="pointer-hand">👉</div>
+                <div class="trigger-text" @click="openDashboardChatbot">Hỏi thêm chi tiết về phân tích PD kết hợp ngành tại đây...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chatbot Component cho Dashboard -->
+        <div v-if="showDashboardChatbot" class="chatbot-container">
+          <div class="chatbot-header">
+            <div class="chatbot-title">
+              <span class="chatbot-icon">🤖</span>
+              <span>Trợ lý ảo Agribank - Dashboard</span>
+            </div>
+            <button @click="closeDashboardChatbot" class="chatbot-close">✕</button>
+          </div>
+          <div class="chatbot-messages">
+            <div v-if="dashboardChatMessages.length === 0" class="chatbot-welcome">
+              <p>👋 Xin chào! Tôi là Trợ lý ảo Agribank.</p>
+              <p>Bạn có thể hỏi thêm về phân tích Dashboard vừa rồi.</p>
+            </div>
+            <div
+              v-for="(message, index) in dashboardChatMessages"
+              :key="index"
+              class="chat-message"
+              :class="{ 'user-message': message.role === 'user', 'assistant-message': message.role === 'assistant' }"
+            >
+              {{ message.content }}
+            </div>
+            <div v-if="isDashboardChatLoading" class="chat-loading">
+              <span class="loading-dot"></span>
+              <span class="loading-dot"></span>
+              <span class="loading-dot"></span>
+            </div>
+          </div>
+          <div class="chatbot-input">
+            <input
+              v-model="dashboardChatInput"
+              @keyup.enter="sendDashboardChatMessage"
+              type="text"
+              placeholder="Nhập câu hỏi của bạn..."
+              class="chat-input-field"
+            />
+            <button @click="sendDashboardChatMessage" class="chat-send-button" :disabled="!dashboardChatInput.trim() || isDashboardChatLoading">
+              ➤
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ TAB CONTENT: Mô phỏng kịch bản xấu -->
+      <div v-if="activeTab === 'scenario'" class="tab-content">
+        <div class="card">
+          <h2 class="card-title">⚠️ Mô phỏng Kịch bản Biến động Kinh tế</h2>
+
+          <!-- Ghi chú hướng dẫn -->
+          <div class="info-note">
+            <span class="note-icon">📝</span>
+            <span class="note-text">
+              <strong>Mục đích:</strong> Mô phỏng tác động của các kịch bản kinh tế xấu (giảm nhẹ, cú sốc trung bình, khủng hoảng) đến xác suất vỡ nợ (PD) và đánh giá khả năng chịu đựng của doanh nghiệp.
+              <br><strong>Lưu ý:</strong> Vui lòng huấn luyện mô hình ở Tab "Huấn luyện mô hình" trước khi sử dụng tính năng này.
+              <br><strong>Cách sử dụng:</strong>
+              <strong>Bước 1:</strong> Chọn nguồn dữ liệu (Tab Dự báo PD hoặc upload file mới) →
+              <strong>Bước 2:</strong> Chọn kịch bản biến động →
+              <strong>Bước 3:</strong> Xem kết quả stress test và khuyến nghị từ AI.
+            </span>
+          </div>
+
+          <!-- Bước 1: Chọn nguồn dữ liệu -->
+          <div style="margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem; color: #FF6B9D;">📁 Bước 1: Chọn nguồn dữ liệu</h3>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" value="from_tab" v-model="scenarioDataSource" />
+                <span>Sử dụng dữ liệu từ Tab "Dự Báo PD"</span>
+                <span v-if="!indicatorsDict" style="color: #999; font-size: 0.85rem; margin-left: 0.5rem;">(Chưa có dữ liệu - Vui lòng dự báo PD trước)</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" value="new_file" v-model="scenarioDataSource" />
+                <span>Tải file XLSX mới để mô phỏng</span>
+              </label>
+            </div>
+
+            <!-- Upload file mới (nếu chọn new_file) -->
+            <div v-if="scenarioDataSource === 'new_file'" style="margin-top: 1rem;">
+              <div class="upload-area" @click="$refs.scenarioFileInput.click()">
+                <div class="upload-icon">📊</div>
+                <p class="upload-text">{{ scenarioFileName || 'Tải lên file XLSX của doanh nghiệp' }}</p>
+                <p class="upload-hint">File XLSX phải có 3 sheets: CDKT, BCTN, LCTT</p>
+              </div>
+              <input
+                ref="scenarioFileInput"
+                type="file"
+                accept=".xlsx,.xls"
+                @change="handleScenarioFile"
+                style="display: none"
+              />
+            </div>
+          </div>
+
+          <!-- Bước 2: Chọn kịch bản -->
+          <div style="margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem; color: #FF6B9D;">⚡ Bước 2: Chọn Kịch bản Biến động</h3>
+            <div class="scenario-cards">
+              <div
+                class="scenario-card"
+                :class="{ selected: selectedScenario === 'mild' }"
+                @click="selectedScenario = 'mild'"
+              >
+                <div class="scenario-icon">🟠</div>
+                <h4 class="scenario-title">Kinh tế giảm nhẹ</h4>
+                <ul class="scenario-details">
+                  <li>Doanh thu thuần <span class="highlight-negative">↓5%</span></li>
+                  <li>Lãi suất vay <span class="highlight-negative">↑10%</span></li>
+                  <li>Giá vốn hàng bán <span class="highlight-negative">↑3%</span></li>
+                  <li>Thanh khoản TSNH <span class="highlight-negative">↓5%</span></li>
+                </ul>
+              </div>
+
+              <div
+                class="scenario-card"
+                :class="{ selected: selectedScenario === 'moderate' }"
+                @click="selectedScenario = 'moderate'"
+              >
+                <div class="scenario-icon">🔴</div>
+                <h4 class="scenario-title">Cú sốc kinh tế trung bình</h4>
+                <ul class="scenario-details">
+                  <li>Doanh thu thuần <span class="highlight-negative">↓12%</span></li>
+                  <li>Lãi suất vay <span class="highlight-negative">↑25%</span></li>
+                  <li>Giá vốn hàng bán <span class="highlight-negative">↑8%</span></li>
+                  <li>Thanh khoản TSNH <span class="highlight-negative">↓12%</span></li>
+                </ul>
+              </div>
+
+              <div
+                class="scenario-card"
+                :class="{ selected: selectedScenario === 'crisis' }"
+                @click="selectedScenario = 'crisis'"
+              >
+                <div class="scenario-icon">⚫</div>
+                <h4 class="scenario-title">Khủng hoảng</h4>
+                <ul class="scenario-details">
+                  <li>Doanh thu thuần <span class="highlight-negative">↓25%</span></li>
+                  <li>Lãi suất vay <span class="highlight-negative">↑40%</span></li>
+                  <li>Giá vốn hàng bán <span class="highlight-negative">↑15%</span></li>
+                  <li>Thanh khoản TSNH <span class="highlight-negative">↓25%</span></li>
+                </ul>
+              </div>
+
+              <div
+                class="scenario-card"
+                :class="{ selected: selectedScenario === 'custom' }"
+                @click="selectedScenario = 'custom'"
+              >
+                <div class="scenario-icon">🟡</div>
+                <h4 class="scenario-title">Tùy chọn biến động</h4>
+                <p class="scenario-hint">Tự điều chỉnh % biến động</p>
+              </div>
+            </div>
+
+            <!-- Custom scenario inputs -->
+            <div v-if="selectedScenario === 'custom'" class="custom-scenario-inputs">
+              <h4 style="margin-bottom: 1rem;">Nhập tỷ lệ biến động (% âm = giảm, % dương = tăng):</h4>
+              <div class="input-grid">
+                <div class="input-group">
+                  <label>Doanh thu thuần (%):</label>
+                  <input type="number" v-model.number="customRevenue" step="0.1" placeholder="-5" />
+                </div>
+                <div class="input-group">
+                  <label>Lãi suất vay (%):</label>
+                  <input type="number" v-model.number="customInterest" step="0.1" placeholder="+10" />
+                </div>
+                <div class="input-group">
+                  <label>Giá vốn hàng bán (%):</label>
+                  <input type="number" v-model.number="customCogs" step="0.1" placeholder="+3" />
+                </div>
+                <div class="input-group">
+                  <label>Thanh khoản TSNH (%):</label>
+                  <input type="number" v-model.number="customLiquidity" step="0.1" placeholder="-5" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nút bắt đầu mô phỏng -->
+          <button
+            @click="runScenarioSimulation"
+            class="btn btn-primary"
+            :disabled="!canRunSimulation || isSimulating"
+            style="width: 100%; margin-bottom: 2rem;"
+          >
+            {{ isSimulating ? '⏳ Đang mô phỏng...' : '🎯 Bắt đầu Mô phỏng' }}
+          </button>
+
+          <!-- Kết quả mô phỏng -->
+          <div v-if="scenarioResult">
+            <!-- Thông tin kịch bản -->
+            <div class="scenario-info-banner">
+              <h3>{{ scenarioResult.scenario_info.name }}</h3>
+              <div class="scenario-changes">
+                <span>Doanh thu: {{ scenarioResult.scenario_info.changes.revenue >= 0 ? '+' : '' }}{{ scenarioResult.scenario_info.changes.revenue }}%</span>
+                <span>Lãi suất: {{ scenarioResult.scenario_info.changes.interest >= 0 ? '+' : '' }}{{ scenarioResult.scenario_info.changes.interest }}%</span>
+                <span>Giá vốn: {{ scenarioResult.scenario_info.changes.cogs >= 0 ? '+' : '' }}{{ scenarioResult.scenario_info.changes.cogs }}%</span>
+                <span>Thanh khoản: {{ scenarioResult.scenario_info.changes.liquidity >= 0 ? '+' : '' }}{{ scenarioResult.scenario_info.changes.liquidity }}%</span>
+              </div>
+            </div>
+
+            <!-- % Thay đổi PD - Thiết kế mới -->
+            <div class="pd-change-section">
+              <div class="pd-comparison-header">
+                <h3 style="color: #FF6B9D; font-size: 1.5rem; margin: 0;">
+                  💫 Kết quả Mô phỏng Tác động
+                </h3>
+              </div>
+
+              <div class="pd-comparison-cards">
+                <!-- Card Trước -->
+                <div class="pd-card pd-before-card">
+                  <div class="pd-card-header">
+                    <span class="pd-card-icon">🟢</span>
+                    <span class="pd-card-title">Trước kịch bản</span>
+                  </div>
+                  <div class="pd-card-value">
+                    {{ (scenarioResult.pd_change.before * 100).toFixed(2) }}%
+                  </div>
+                  <div class="pd-card-label">Xác suất vỡ nợ (PD)</div>
+                </div>
+
+                <!-- Arrow -->
+                <div class="pd-arrow-container">
+                  <div class="pd-arrow">
+                    <span style="font-size: 2.5rem; color: #FF6B9D;">→</span>
+                  </div>
+                  <div class="pd-change-badge" :class="getPdChangeClass(scenarioResult.pd_change.change_pct)">
+                    <span class="change-icon">{{ scenarioResult.pd_change.change_pct >= 0 ? '⬆' : '⬇' }}</span>
+                    <span class="change-value">{{ scenarioResult.pd_change.change_pct >= 0 ? '+' : '' }}{{ scenarioResult.pd_change.change_pct }}%</span>
+                  </div>
+                </div>
+
+                <!-- Card Sau -->
+                <div class="pd-card pd-after-card">
+                  <div class="pd-card-header">
+                    <span class="pd-card-icon">🔴</span>
+                    <span class="pd-card-title">Sau kịch bản</span>
+                  </div>
+                  <div class="pd-card-value">
+                    {{ (scenarioResult.pd_change.after * 100).toFixed(2) }}%
+                  </div>
+                  <div class="pd-card-label">Xác suất vỡ nợ (PD)</div>
+                </div>
+              </div>
+
+              <!-- Nhận xét ngắn gọn -->
+              <div class="pd-analysis-note">
+                <div class="note-icon">💡</div>
+                <div class="note-content">
+                  <strong>Nhận xét:</strong>
+                  <span v-if="scenarioResult.pd_change.change_pct > 50">
+                    Kịch bản <strong>{{ scenarioResult.scenario_info.name }}</strong> tác động <strong style="color: #dc3545;">CỰC KỲ NGHIÊM TRỌNG</strong> đến khả năng trả nợ.
+                    Xác suất vỡ nợ tăng <strong>{{ scenarioResult.pd_change.change_pct }}%</strong>, cần <strong>xem xét kỹ lưỡng</strong> trước khi cấp tín dụng.
+                  </span>
+                  <span v-else-if="scenarioResult.pd_change.change_pct > 20">
+                    Kịch bản <strong>{{ scenarioResult.scenario_info.name }}</strong> có tác động <strong style="color: #fd7e14;">ĐÁNG KỂ</strong> đến khả năng trả nợ.
+                    PD tăng <strong>{{ scenarioResult.pd_change.change_pct }}%</strong>, khuyến nghị <strong>thận trọng</strong> và có biện pháp giảm thiểu rủi ro.
+                  </span>
+                  <span v-else-if="scenarioResult.pd_change.change_pct > 5">
+                    Kịch bản <strong>{{ scenarioResult.scenario_info.name }}</strong> tác động <strong style="color: #ffc107;">VỪA PHẢI</strong> đến rủi ro vỡ nợ.
+                    PD tăng <strong>{{ scenarioResult.pd_change.change_pct }}%</strong>, doanh nghiệp vẫn <strong>chịu đựng được</strong> nhưng cần theo dõi.
+                  </span>
+                  <span v-else-if="scenarioResult.pd_change.change_pct > 0">
+                    Kịch bản <strong>{{ scenarioResult.scenario_info.name }}</strong> có tác động <strong style="color: #28a745;">NHẸ</strong> đến khả năng trả nợ.
+                    PD chỉ tăng <strong>{{ scenarioResult.pd_change.change_pct }}%</strong>, doanh nghiệp <strong>khá ổn định</strong> trong điều kiện bất lợi.
+                  </span>
+                  <span v-else-if="scenarioResult.pd_change.change_pct === 0">
+                    Không có thay đổi đáng kể về PD. Doanh nghiệp <strong>duy trì ổn định</strong>.
+                  </span>
+                  <span v-else>
+                    Kịch bản <strong>{{ scenarioResult.scenario_info.name }}</strong> dẫn đến <strong style="color: #28a745;">CẢI THIỆN</strong> PD (giảm {{ Math.abs(scenarioResult.pd_change.change_pct) }}%).
+                    Đây là dấu hiệu <strong>tích cực</strong>.
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2 Bảng so sánh nằm ngang -->
+            <div style="margin: 3rem 0;">
+              <h3 style="margin-bottom: 1.5rem; color: #FF6B9D; text-align: center; font-size: 1.6rem;">
+                📊 So sánh 14 Chỉ số Tài chính (Trước / Sau kịch bản)
+              </h3>
+              <div class="comparison-tables-container">
+                <!-- Bảng Trước kịch bản -->
+                <div class="comparison-table-wrapper">
+                  <h4 class="table-subtitle">Trước kịch bản (Bình thường)</h4>
+                  <table class="indicators-table">
+                    <thead>
+                      <tr>
+                        <th>Chỉ số</th>
+                        <th>Giá trị</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="indicator in scenarioResult.indicators_before" :key="indicator.code">
+                        <td>
+                          <div class="indicator-code-cell">{{ indicator.code }}</div>
+                          <div class="indicator-name-cell">{{ indicator.name }}</div>
+                        </td>
+                        <td class="indicator-value-cell">{{ indicator.value.toFixed(4) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="pd-summary">
+                    <strong>PD (Stacking):</strong> {{ (scenarioResult.prediction_before.pd_stacking * 100).toFixed(2) }}%
+                  </div>
+                </div>
+
+                <!-- Bảng Sau kịch bản -->
+                <div class="comparison-table-wrapper">
+                  <h4 class="table-subtitle">Sau kịch bản ({{ scenarioResult.scenario_info.name }})</h4>
+                  <table class="indicators-table">
+                    <thead>
+                      <tr>
+                        <th>Chỉ số</th>
+                        <th>Giá trị</th>
+                        <th>Thay đổi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(indicator, index) in scenarioResult.indicators_after" :key="indicator.code">
+                        <td>
+                          <div class="indicator-code-cell">{{ indicator.code }}</div>
+                          <div class="indicator-name-cell">{{ indicator.name }}</div>
+                        </td>
+                        <td class="indicator-value-cell">{{ indicator.value.toFixed(4) }}</td>
+                        <td class="change-cell" :class="getChangeClass(indicator.value, scenarioResult.indicators_before[index].value)">
+                          {{ getChangeText(indicator.value, scenarioResult.indicators_before[index].value) }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="pd-summary">
+                    <strong>PD (Stacking):</strong> {{ (scenarioResult.prediction_after.pd_stacking * 100).toFixed(2) }}%
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2 Biểu đồ so sánh PD (nằm ngang) -->
+            <div style="margin: 3rem 0;">
+              <h3 style="margin-bottom: 1.5rem; color: #FF6B9D; text-align: center; font-size: 1.6rem;">
+                📊 So sánh PD Trước và Sau Biến động Kinh tế
+              </h3>
+              <div class="charts-comparison-container">
+                <div class="chart-wrapper">
+                  <h4 class="chart-title">🟢 Trước kịch bản (Bình thường)</h4>
+                  <RiskChart :prediction="scenarioResult.prediction_before" />
+                </div>
+                <div class="chart-wrapper">
+                  <h4 class="chart-title">🔴 Sau kịch bản ({{ scenarioResult.scenario_info.name }})</h4>
+                  <RiskChart :prediction="scenarioResult.prediction_after" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Nút phân tích Gemini -->
+            <button
+              v-if="!scenarioAnalysis"
+              @click="analyzeScenario"
+              class="btn btn-secondary"
+              :disabled="isAnalyzingScenario"
+              style="width: 100%; margin: 2rem 0;"
+            >
+              {{ isAnalyzingScenario ? '⏳ Đang phân tích...' : '🤖 Phân tích chuyên sâu bằng AI' }}
+            </button>
+
+            <!-- Kết quả phân tích Gemini -->
+            <div v-if="scenarioAnalysis" class="gemini-analysis-section">
+              <h3 style="margin-bottom: 1rem; color: #FF6B9D;">🤖 Phân tích Chuyên sâu từ AI</h3>
+              <div class="analysis-content" style="white-space: pre-wrap;">{{ scenarioAnalysis }}</div>
+            </div>
+
+            <!-- Chatbot Trigger - Hiện sau khi có phân tích -->
+            <div v-if="scenarioAnalysis && !showScenarioChatbot" class="chatbot-trigger">
+              <div class="pointer-hand">👉</div>
+              <div class="trigger-text" @click="openScenarioChatbot">Hỏi thêm chi tiết tại đây...</div>
+            </div>
+
+            <!-- Nút xuất báo cáo Word -->
+            <div v-if="scenarioAnalysis" style="margin-top: 2rem; text-align: center;">
+              <button @click="exportScenarioReport" class="btn btn-export" :disabled="isExportingScenario">
+                {{ isExportingScenario ? '⏳ Đang xuất...' : '📄 Xuất Báo cáo Word' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scenario Chatbot Component - Nằm ngoài card -->
+      <div v-if="showScenarioChatbot && activeTab === 'scenario'" class="chatbot-container">
+        <div class="chatbot-header">
+          <div class="chatbot-title">
+            <span class="chatbot-icon">🤖</span>
+            <span>Trợ lý ảo Agribank</span>
+          </div>
+          <button @click="closeScenarioChatbot" class="chatbot-close">✕</button>
+        </div>
+        <div class="chatbot-messages">
+          <div v-if="scenarioChatMessages.length === 0" class="chatbot-welcome">
+            <p>👋 Xin chào! Tôi là Trợ lý ảo Agribank.</p>
+            <p>Bạn có thể hỏi thêm về phân tích mô phỏng kịch bản vừa rồi.</p>
+          </div>
+          <div
+            v-for="(message, index) in scenarioChatMessages"
+            :key="index"
+            class="chat-message"
+            :class="{ 'user-message': message.role === 'user', 'assistant-message': message.role === 'assistant' }"
+          >
+            {{ message.content }}
+          </div>
+          <div v-if="isScenarioChatLoading" class="chat-loading">
+            <span class="loading-dot"></span>
+            <span class="loading-dot"></span>
+            <span class="loading-dot"></span>
+          </div>
+        </div>
+        <div class="chatbot-input">
+          <input
+            v-model="scenarioChatInput"
+            @keyup.enter="sendScenarioChatMessage"
+            type="text"
+            placeholder="Nhập câu hỏi của bạn..."
+            class="chat-input-field"
+          />
+          <button @click="sendScenarioChatMessage" class="chat-send-button" :disabled="!scenarioChatInput.trim() || isScenarioChatLoading">
+            ➤
+          </button>
+        </div>
+      </div>
+
+      <!-- ✅ TAB CONTENT: Mô phỏng Vĩ mô -->
+      <div v-if="activeTab === 'macro'" class="tab-content">
+        <div class="card">
+          <h2 class="card-title">📊 Mô phỏng Vĩ mô - Stress Testing</h2>
+
+          <!-- Ghi chú hướng dẫn -->
+          <div class="info-note">
+            <span class="note-icon">📝</span>
+            <span class="note-text">
+              <strong>Mục đích:</strong> Mô phỏng tác động của các biến vĩ mô (GDP, lạm phát, lãi suất NHNN, tỷ giá USD/VND) đến khả năng trả nợ của doanh nghiệp thông qua kênh truyền dẫn Macro-to-Micro.
+              <br><strong>Lưu ý:</strong> Vui lòng huấn luyện mô hình ở Tab "Huấn luyện mô hình" trước khi sử dụng tính năng này.
+              <br><strong>Cách sử dụng:</strong>
+              <strong>Bước 1:</strong> Chọn nguồn dữ liệu (Tab Dự báo PD hoặc upload file mới) →
+              <strong>Bước 2:</strong> Chọn kịch bản vĩ mô (Suy thoái nhẹ/trung bình/nặng hoặc tự tạo) →
+              <strong>Bước 3:</strong> Xem kết quả stress test và phân tích tác động.
+            </span>
+          </div>
+
+          <!-- Bước 1: Chọn nguồn dữ liệu -->
+          <div style="margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem; color: #3B82F6;">📁 Bước 1: Chọn nguồn dữ liệu</h3>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" value="from_tab" v-model="macroDataSource" />
+                <span>Sử dụng dữ liệu từ Tab "Dự Báo PD"</span>
+                <span v-if="!indicatorsDict" style="color: #999; font-size: 0.85rem; margin-left: 0.5rem;">(Chưa có dữ liệu - Vui lòng dự báo PD trước)</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" value="new_file" v-model="macroDataSource" />
+                <span>Tải file XLSX mới để mô phỏng</span>
+              </label>
+            </div>
+
+            <!-- Upload file mới (nếu chọn new_file) -->
+            <div v-if="macroDataSource === 'new_file'" style="margin-top: 1rem;">
+              <div class="upload-area" @click="$refs.macroFileInput.click()">
+                <div class="upload-icon">📊</div>
+                <p class="upload-text">{{ macroFileName || 'Tải lên file XLSX của doanh nghiệp' }}</p>
+                <p class="upload-hint">File XLSX phải có 3 sheets: CDKT, BCTN, LCTT</p>
+              </div>
+              <input
+                ref="macroFileInput"
+                type="file"
+                accept=".xlsx,.xls"
+                @change="handleMacroFile"
+                style="display: none"
+              />
+            </div>
+          </div>
+
+          <!-- Bước 2: Chọn kịch bản vĩ mô -->
+          <div style="margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem; color: #3B82F6;">🌍 Bước 2: Chọn Kịch bản Vĩ mô</h3>
+            <div class="scenario-cards">
+              <div
+                class="scenario-card macro-card"
+                :class="{ selected: selectedMacroScenario === 'recession_mild' }"
+                @click="selectedMacroScenario = 'recession_mild'"
+              >
+                <div class="scenario-icon">🟠</div>
+                <h4 class="scenario-title">Suy thoái nhẹ</h4>
+                <ul class="scenario-details">
+                  <li>GDP: <span class="highlight-negative">-1.5%</span></li>
+                  <li>CPI: <span class="highlight-negative">6.0%</span></li>
+                  <li>PPI: <span class="highlight-negative">8.0%</span></li>
+                  <li>Lãi suất NHNN: <span class="highlight-negative">+100 bps</span></li>
+                  <li>Tỷ giá USD/VND: <span class="highlight-negative">+3.0%</span></li>
+                </ul>
+              </div>
+
+              <div
+                class="scenario-card macro-card"
+                :class="{ selected: selectedMacroScenario === 'recession_moderate' }"
+                @click="selectedMacroScenario = 'recession_moderate'"
+              >
+                <div class="scenario-icon">🔴</div>
+                <h4 class="scenario-title">Suy thoái trung bình</h4>
+                <ul class="scenario-details">
+                  <li>GDP: <span class="highlight-negative">-3.5%</span></li>
+                  <li>CPI: <span class="highlight-negative">10.0%</span></li>
+                  <li>PPI: <span class="highlight-negative">14.0%</span></li>
+                  <li>Lãi suất NHNN: <span class="highlight-negative">+200 bps</span></li>
+                  <li>Tỷ giá USD/VND: <span class="highlight-negative">+6.0%</span></li>
+                </ul>
+              </div>
+
+              <div
+                class="scenario-card macro-card"
+                :class="{ selected: selectedMacroScenario === 'crisis' }"
+                @click="selectedMacroScenario = 'crisis'"
+              >
+                <div class="scenario-icon">⚫</div>
+                <h4 class="scenario-title">Khủng hoảng</h4>
+                <ul class="scenario-details">
+                  <li>GDP: <span class="highlight-negative">-6.0%</span></li>
+                  <li>CPI: <span class="highlight-negative">15.0%</span></li>
+                  <li>PPI: <span class="highlight-negative">20.0%</span></li>
+                  <li>Lãi suất NHNN: <span class="highlight-negative">+300 bps</span></li>
+                  <li>Tỷ giá USD/VND: <span class="highlight-negative">+10.0%</span></li>
+                </ul>
+              </div>
+
+              <div
+                class="scenario-card macro-card"
+                :class="{ selected: selectedMacroScenario === 'custom' }"
+                @click="selectedMacroScenario = 'custom'"
+              >
+                <div class="scenario-icon">🟡</div>
+                <h4 class="scenario-title">Tùy chỉnh vĩ mô</h4>
+                <p class="scenario-hint">Tự điều chỉnh các biến vĩ mô</p>
+              </div>
+            </div>
+
+            <!-- Custom macro scenario inputs -->
+            <div v-if="selectedMacroScenario === 'custom'" class="custom-scenario-inputs">
+              <h4 style="margin-bottom: 1rem;">Nhập giá trị các biến vĩ mô:</h4>
+              <div class="input-grid">
+                <div class="input-group">
+                  <label>GDP tăng trưởng (%):</label>
+                  <input type="number" v-model.number="customGdp" step="0.1" placeholder="-3.5" />
+                </div>
+                <div class="input-group">
+                  <label>Lạm phát CPI (%):</label>
+                  <input type="number" v-model.number="customCpi" step="0.1" placeholder="10.0" />
+                </div>
+                <div class="input-group">
+                  <label>Lạm phát PPI (%):</label>
+                  <input type="number" v-model.number="customPpi" step="0.1" placeholder="14.0" />
+                </div>
+                <div class="input-group">
+                  <label>Lãi suất NHNN (bps):</label>
+                  <input type="number" v-model.number="customPolicyRate" step="10" placeholder="200" />
+                </div>
+                <div class="input-group">
+                  <label>Tỷ giá USD/VND (%):</label>
+                  <input type="number" v-model.number="customFx" step="0.1" placeholder="6.0" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bước 3: Chọn ngành nghề -->
+          <div style="margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem; color: #3B82F6;">🏭 Bước 3: Chọn Ngành nghề</h3>
+            <select v-model="selectedIndustryCode" class="input-field" style="font-size: 1rem; padding: 0.8rem;">
+              <option value="manufacturing">🏭 Sản xuất</option>
+              <option value="export">📦 Xuất khẩu</option>
+              <option value="retail">🛒 Bán lẻ</option>
+            </select>
+            <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">
+              Ngành nghề ảnh hưởng đến hệ số nhạy cảm trong kênh truyền dẫn Macro → Micro
+            </p>
+          </div>
+
+          <!-- Nút bắt đầu mô phỏng -->
+          <button
+            @click="runMacroSimulation"
+            class="btn btn-primary"
+            :disabled="!canRunMacroSimulation || isSimulatingMacro"
+            style="width: 100%; margin-bottom: 2rem;"
+          >
+            {{ isSimulatingMacro ? '⏳ Đang mô phỏng...' : '🎯 Bắt đầu Mô phỏng Vĩ mô' }}
+          </button>
+
+          <!-- Kết quả mô phỏng vĩ mô -->
+          <div v-if="macroResult">
+            <!-- Banner kịch bản vĩ mô -->
+            <div class="macro-scenario-banner">
+              <h3>{{ macroResult.scenario_info.name }} - Ngành: {{ macroResult.scenario_info.industry }}</h3>
+              <div class="macro-variables-grid">
+                <span>GDP: {{ macroResult.macro_variables.gdp_growth_pct >= 0 ? '+' : '' }}{{ macroResult.macro_variables.gdp_growth_pct }}%</span>
+                <span>CPI: {{ macroResult.macro_variables.inflation_cpi_pct }}%</span>
+                <span>PPI: {{ macroResult.macro_variables.inflation_ppi_pct }}%</span>
+                <span>Lãi suất NHNN: +{{ macroResult.macro_variables.policy_rate_change_bps }} bps</span>
+                <span>Tỷ giá: +{{ macroResult.macro_variables.fx_usd_vnd_pct }}%</span>
+              </div>
+            </div>
+
+            <!-- Box Chuyển đổi Macro → Micro -->
+            <div class="macro-to-micro-box">
+              <h3 style="color: #3B82F6; font-size: 1.4rem; margin-bottom: 1rem; text-align: center;">
+                🔄 Kênh truyền dẫn: Macro → Micro
+              </h3>
+              <p style="text-align: center; color: #666; margin-bottom: 1.5rem;">
+                Các biến vĩ mô được chuyển đổi thành biến vi mô thông qua hệ số nhạy cảm ngành
+              </p>
+              <div class="micro-shocks-grid">
+                <div class="micro-shock-card">
+                  <div class="micro-icon">💰</div>
+                  <div class="micro-label">Doanh thu thuần</div>
+                  <div class="micro-value" :class="{ negative: macroResult.micro_shocks.revenue_change_pct < 0 }">
+                    {{ macroResult.micro_shocks.revenue_change_pct >= 0 ? '+' : '' }}{{ macroResult.micro_shocks.revenue_change_pct }}%
+                  </div>
+                </div>
+                <div class="micro-shock-card">
+                  <div class="micro-icon">📦</div>
+                  <div class="micro-label">Giá vốn hàng bán</div>
+                  <div class="micro-value" :class="{ negative: macroResult.micro_shocks.cogs_change_pct > 0 }">
+                    {{ macroResult.micro_shocks.cogs_change_pct >= 0 ? '+' : '' }}{{ macroResult.micro_shocks.cogs_change_pct }}%
+                  </div>
+                </div>
+                <div class="micro-shock-card">
+                  <div class="micro-icon">💹</div>
+                  <div class="micro-label">Lãi suất vay</div>
+                  <div class="micro-value" :class="{ negative: macroResult.micro_shocks.interest_rate_change_pct > 0 }">
+                    {{ macroResult.micro_shocks.interest_rate_change_pct >= 0 ? '+' : '' }}{{ macroResult.micro_shocks.interest_rate_change_pct }}%
+                  </div>
+                </div>
+                <div class="micro-shock-card">
+                  <div class="micro-icon">💧</div>
+                  <div class="micro-label">Thanh khoản TSNH</div>
+                  <div class="micro-value" :class="{ negative: macroResult.micro_shocks.liquidity_shock_pct < 0 }">
+                    {{ macroResult.micro_shocks.liquidity_shock_pct >= 0 ? '+' : '' }}{{ macroResult.micro_shocks.liquidity_shock_pct }}%
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- So sánh PD Trước/Sau - Giống tab scenario -->
+            <div class="pd-change-section">
+              <div class="pd-comparison-header">
+                <h3 style="color: #3B82F6; font-size: 1.5rem; margin: 0;">
+                  💫 Kết quả Mô phỏng Tác động
+                </h3>
+              </div>
+
+              <div class="pd-comparison-cards">
+                <!-- Card Trước -->
+                <div class="pd-card pd-before-card">
+                  <div class="pd-card-header">
+                    <span class="pd-card-icon">🟢</span>
+                    <span class="pd-card-title">Trước kịch bản vĩ mô</span>
+                  </div>
+                  <div class="pd-card-value">
+                    {{ (macroResult.pd_change.before * 100).toFixed(2) }}%
+                  </div>
+                  <div class="pd-card-label">Xác suất vỡ nợ (PD)</div>
+                </div>
+
+                <!-- Arrow -->
+                <div class="pd-arrow-container">
+                  <div class="pd-arrow">
+                    <span style="font-size: 2.5rem; color: #3B82F6;">→</span>
+                  </div>
+                  <div class="pd-change-badge" :class="getPdChangeClass(macroResult.pd_change.change_pct)">
+                    <span class="change-icon">{{ macroResult.pd_change.change_pct >= 0 ? '⬆' : '⬇' }}</span>
+                    <span class="change-value">{{ macroResult.pd_change.change_pct >= 0 ? '+' : '' }}{{ macroResult.pd_change.change_pct }}%</span>
+                  </div>
+                </div>
+
+                <!-- Card Sau -->
+                <div class="pd-card pd-after-card">
+                  <div class="pd-card-header">
+                    <span class="pd-card-icon">🔴</span>
+                    <span class="pd-card-title">Sau kịch bản vĩ mô</span>
+                  </div>
+                  <div class="pd-card-value">
+                    {{ (macroResult.pd_change.after * 100).toFixed(2) }}%
+                  </div>
+                  <div class="pd-card-label">Xác suất vỡ nợ (PD)</div>
+                </div>
+              </div>
+
+              <!-- Nhận xét ngắn gọn -->
+              <div class="pd-analysis-note">
+                <div class="note-icon">💡</div>
+                <div class="note-content">
+                  <strong>Nhận xét:</strong>
+                  <span v-if="macroResult.pd_change.change_pct > 50">
+                    Kịch bản vĩ mô <strong>{{ macroResult.scenario_info.name }}</strong> tác động <strong style="color: #dc3545;">CỰC KỲ NGHIÊM TRỌNG</strong> đến khả năng trả nợ.
+                    Xác suất vỡ nợ tăng <strong>{{ macroResult.pd_change.change_pct }}%</strong>, cần <strong>xem xét kỹ lưỡng</strong> trước khi cấp tín dụng.
+                  </span>
+                  <span v-else-if="macroResult.pd_change.change_pct > 20">
+                    Kịch bản vĩ mô <strong>{{ macroResult.scenario_info.name }}</strong> có tác động <strong style="color: #fd7e14;">ĐÁNG KỂ</strong> đến khả năng trả nợ.
+                    PD tăng <strong>{{ macroResult.pd_change.change_pct }}%</strong>, khuyến nghị <strong>thận trọng</strong> và có biện pháp giảm thiểu rủi ro.
+                  </span>
+                  <span v-else-if="macroResult.pd_change.change_pct > 5">
+                    Kịch bản vĩ mô <strong>{{ macroResult.scenario_info.name }}</strong> tác động <strong style="color: #ffc107;">VỪA PHẢI</strong> đến rủi ro vỡ nợ.
+                    PD tăng <strong>{{ macroResult.pd_change.change_pct }}%</strong>, doanh nghiệp vẫn <strong>chịu đựng được</strong> nhưng cần theo dõi.
+                  </span>
+                  <span v-else-if="macroResult.pd_change.change_pct > 0">
+                    Kịch bản vĩ mô <strong>{{ macroResult.scenario_info.name }}</strong> có tác động <strong style="color: #28a745;">NHẸ</strong> đến khả năng trả nợ.
+                    PD chỉ tăng <strong>{{ macroResult.pd_change.change_pct }}%</strong>, doanh nghiệp <strong>khá ổn định</strong> trong điều kiện bất lợi.
+                  </span>
+                  <span v-else-if="macroResult.pd_change.change_pct === 0">
+                    Không có thay đổi đáng kể về PD. Doanh nghiệp <strong>duy trì ổn định</strong>.
+                  </span>
+                  <span v-else>
+                    Kịch bản vĩ mô <strong>{{ macroResult.scenario_info.name }}</strong> dẫn đến <strong style="color: #28a745;">CẢI THIỆN</strong> PD (giảm {{ Math.abs(macroResult.pd_change.change_pct) }}%).
+                    Đây là dấu hiệu <strong>tích cực</strong>.
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2 Bảng so sánh 14 chỉ số (giống tab scenario) -->
+            <div style="margin: 3rem 0;">
+              <h3 style="margin-bottom: 1.5rem; color: #3B82F6; text-align: center; font-size: 1.6rem;">
+                📊 So sánh 14 Chỉ số Tài chính (Trước / Sau kịch bản vĩ mô)
+              </h3>
+              <div class="comparison-tables-container">
+                <!-- Bảng Trước kịch bản -->
+                <div class="comparison-table-wrapper">
+                  <h4 class="table-subtitle">Trước kịch bản (Bình thường)</h4>
+                  <table class="indicators-table">
+                    <thead>
+                      <tr>
+                        <th>Chỉ số</th>
+                        <th>Giá trị</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="indicator in macroResult.indicators_before" :key="indicator.code">
+                        <td>
+                          <div class="indicator-code-cell">{{ indicator.code }}</div>
+                          <div class="indicator-name-cell">{{ indicator.name }}</div>
+                        </td>
+                        <td class="indicator-value-cell">{{ indicator.value.toFixed(4) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="pd-summary">
+                    <strong>PD (Stacking):</strong> {{ (macroResult.prediction_before.pd_stacking * 100).toFixed(2) }}%
+                  </div>
+                </div>
+
+                <!-- Bảng Sau kịch bản -->
+                <div class="comparison-table-wrapper">
+                  <h4 class="table-subtitle">Sau kịch bản ({{ macroResult.scenario_info.name }})</h4>
+                  <table class="indicators-table">
+                    <thead>
+                      <tr>
+                        <th>Chỉ số</th>
+                        <th>Giá trị</th>
+                        <th>Thay đổi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(indicator, index) in macroResult.indicators_after" :key="indicator.code">
+                        <td>
+                          <div class="indicator-code-cell">{{ indicator.code }}</div>
+                          <div class="indicator-name-cell">{{ indicator.name }}</div>
+                        </td>
+                        <td class="indicator-value-cell">{{ indicator.value.toFixed(4) }}</td>
+                        <td class="change-cell" :class="getChangeClass(indicator.value, macroResult.indicators_before[index].value)">
+                          {{ getChangeText(indicator.value, macroResult.indicators_before[index].value) }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="pd-summary">
+                    <strong>PD (Stacking):</strong> {{ (macroResult.prediction_after.pd_stacking * 100).toFixed(2) }}%
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2 Biểu đồ so sánh PD -->
+            <div style="margin: 3rem 0;">
+              <h3 style="margin-bottom: 1.5rem; color: #3B82F6; text-align: center; font-size: 1.6rem;">
+                📊 So sánh PD Trước và Sau Kịch bản Vĩ mô
+              </h3>
+              <div class="charts-comparison-container">
+                <div class="chart-wrapper">
+                  <h4 class="chart-title">🟢 Trước kịch bản (Bình thường)</h4>
+                  <RiskChart :prediction="macroResult.prediction_before" />
+                </div>
+                <div class="chart-wrapper">
+                  <h4 class="chart-title">🔴 Sau kịch bản ({{ macroResult.scenario_info.name }})</h4>
+                  <RiskChart :prediction="macroResult.prediction_after" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Gemini Analysis Section -->
+            <div style="margin: 3rem 0;">
+              <button
+                @click="analyzeMacro"
+                class="btn btn-primary"
+                :disabled="isAnalyzingMacro"
+                style="width: 100%;"
+              >
+                {{ isAnalyzingMacro ? '⏳ Đang phân tích...' : '🤖 Phân tích sâu bằng AI' }}
+              </button>
+
+              <div v-if="macroAnalysis" class="analysis-box" style="margin-top: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: #FF6B9D; font-size: 1.4rem;">
+                  🧠 Phân tích chuyên sâu từ AI
+                </h3>
+                <div class="analysis-content">{{ macroAnalysis }}</div>
+              </div>
+            </div>
+
+            <!-- Chatbot Button -->
+            <div v-if="macroAnalysis" style="margin-top: 2rem; text-align: center;">
+              <button
+                @click="openMacroChatbot"
+                class="btn btn-accent"
+                style="padding: 0.8rem 2rem; font-size: 1rem;"
+              >
+                💬 Hỏi thêm chi tiết về kết quả mô phỏng
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chatbot Component for Macro -->
+        <div v-if="showMacroChatbot" class="chatbot-container">
+          <div class="chatbot-header">
+            <div class="chatbot-title">
+              <span class="chatbot-icon">🤖</span>
+              <span>Trợ lý ảo Agribank</span>
+            </div>
+            <button @click="closeMacroChatbot" class="chatbot-close">✕</button>
+          </div>
+          <div class="chatbot-messages">
+            <div v-if="macroChatMessages.length === 0" class="chatbot-welcome">
+              <p>👋 Xin chào! Tôi là Trợ lý ảo Agribank.</p>
+              <p>Bạn có thể hỏi thêm về kết quả mô phỏng vĩ mô vừa rồi.</p>
+            </div>
+            <div
+              v-for="(message, index) in macroChatMessages"
+              :key="index"
+              class="chat-message"
+              :class="{ 'user-message': message.role === 'user', 'assistant-message': message.role === 'assistant' }"
+            >
+              {{ message.content }}
+            </div>
+            <div v-if="isMacroChatLoading" class="chat-loading">
+              <span class="loading-dot"></span>
+              <span class="loading-dot"></span>
+              <span class="loading-dot"></span>
+            </div>
+          </div>
+          <div class="chatbot-input">
+            <input
+              v-model="macroChatInput"
+              @keyup.enter="sendMacroChatMessage"
+              type="text"
+              placeholder="Nhập câu hỏi của bạn..."
+              class="chat-input-field"
+            />
+            <button @click="sendMacroChatMessage" class="chat-send-button" :disabled="!macroChatInput.trim() || isMacroChatLoading">
+              ➤
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ TAB CONTENT: Huấn luyện Mô hình (WITH SUB-TABS) -->
+      <div v-if="activeTab === 'train'" class="tab-content">
+        <div class="card">
+          <h2 class="card-title">📚 Huấn luyện Mô hình Machine Learning</h2>
+
+          <!-- Sub-tabs cho Training -->
+          <div class="sub-tabs-container" style="margin: 1.5rem 0;">
+            <button
+              @click="trainSubTab = 'pd'"
+              class="sub-tab-button"
+              :class="{ active: trainSubTab === 'pd' }"
+            >
+              🔮 Dự báo PD
+            </button>
+            <button
+              @click="trainSubTab = 'early-warning'"
+              class="sub-tab-button"
+              :class="{ active: trainSubTab === 'early-warning' }"
+            >
+              ⚠️ Cảnh báo rủi ro sớm
+            </button>
+            <button
+              @click="trainSubTab = 'anomaly'"
+              class="sub-tab-button"
+              :class="{ active: trainSubTab === 'anomaly' }"
+            >
+              🚨 Phát hiện gian lận
+            </button>
+            <button
+              @click="trainSubTab = 'survival'"
+              class="sub-tab-button"
+              :class="{ active: trainSubTab === 'survival' }"
+            >
+              ⏳ Phân tích sống sót
+            </button>
+            <button
+              @click="trainSubTab = 'all'"
+              class="sub-tab-button"
+              :class="{ active: trainSubTab === 'all' }"
+            >
+              🚀 Huấn luyện tất cả
+            </button>
+          </div>
+
+          <!-- SUB-TAB: Dự báo PD -->
+          <div v-if="trainSubTab === 'pd'">
+            <!-- Hướng dẫn -->
+            <div class="training-guide">
+              <span class="guide-icon">📖</span>
+              <div class="guide-text">
+                <strong>Hướng dẫn:</strong> Tải file CSV chứa 14 chỉ số tài chính (X_1 → X_14) và cột 'default' (0=không vỡ nợ, 1=vỡ nợ).
+                Nhấn "Huấn luyện" để train mô hình Stacking Ensemble dự báo xác suất vỡ nợ (PD).
+              </div>
+            </div>
+
+            <h3 style="color: #FF6B9D; margin: 1.5rem 0 1rem 0; font-size: 1.3rem;">📚 Huấn luyện Mô hình Dự báo PD</h3>
+
+            <div style="margin-bottom: 2rem;">
+              <div class="upload-area" @click="$refs.trainFileInput.click()">
+                <div class="upload-icon">📤</div>
+                <p class="upload-text">{{ trainFileName || 'Tải lên file CSV để huấn luyện' }}</p>
+                <p class="upload-hint">File CSV cần có 14 cột (X_1 đến X_14) và cột 'default'</p>
+              </div>
+
+              <input
+                ref="trainFileInput"
+                type="file"
+                accept=".csv"
+                @change="handleTrainFile"
+                style="display: none"
+              />
+
+              <button
+                @click="trainModel"
+                class="btn btn-primary"
+                :disabled="!trainFile || isTraining"
+                style="margin-top: 1rem; width: 100%;"
+              >
+                {{ isTraining ? '⏳ Đang huấn luyện...' : '🚀 Huấn luyện Mô hình' }}
+              </button>
+            </div>
+
+            <!-- Training Results -->
+            <div v-if="trainResult" style="margin-top: 2rem;">
+              <h3 style="margin-bottom: 1rem; color: #FF6B9D; font-size: 1.2rem;">
+                ✅ Kết quả Huấn luyện
+              </h3>
+              <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 240, 247, 0.95) 100%); padding: 1.5rem; border-radius: 14px; border: 2px solid rgba(255, 182, 193, 0.3);">
+                <p style="margin-bottom: 0.5rem;"><strong>Số mẫu Train:</strong> {{ trainResult.train_samples }}</p>
+                <p style="margin-bottom: 0.5rem;"><strong>Số mẫu Test:</strong> {{ trainResult.test_samples }}</p>
+                <p style="margin-bottom: 0.5rem;"><strong>Accuracy (Test):</strong> {{ (trainResult.metrics_test.accuracy * 100).toFixed(2) }}%</p>
+                <p style="margin-bottom: 0;"><strong>AUC (Test):</strong> {{ (trainResult.metrics_test.auc * 100).toFixed(2) }}%</p>
+              </div>
+            </div>
+
+            <!-- Mô tả mô hình -->
+            <div class="model-description-section" style="margin-top: 3rem;">
+              <h3 style="color: #FF6B9D; margin-bottom: 1rem;">🧠 Về Mô hình Dự báo PD</h3>
+
+              <div class="model-info-card">
+                <h4>📊 Các mô hình được sử dụng:</h4>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                  <li><strong>Logistic Regression:</strong> Mô hình thống kê cổ điển, dễ hiểu và giải thích</li>
+                  <li><strong>Random Forest:</strong> Tập hợp nhiều cây quyết định để tăng độ chính xác</li>
+                  <li><strong>XGBoost:</strong> Thuật toán boosting mạnh mẽ với hiệu năng cao</li>
+                  <li><strong>Stacking Ensemble:</strong> Kết hợp 3 mô hình trên để cho kết quả tốt nhất</li>
+                </ul>
+
+                <h4>🎯 Mục đích sử dụng:</h4>
+                <p style="margin: 0.5rem 0;">
+                  Dự báo xác suất vỡ nợ (PD - Probability of Default) của doanh nghiệp dựa trên 14 chỉ số tài chính.
+                  Giúp ngân hàng đánh giá rủi ro tín dụng trước khi cho vay.
+                </p>
+
+                <h4>⚙️ Cách hoạt động:</h4>
+                <p style="margin: 0.5rem 0;">
+                  Mô hình học từ dữ liệu lịch sử (DN đã vỡ nợ vs chưa vỡ nợ), tìm ra mối quan hệ giữa các chỉ số tài chính
+                  và khả năng vỡ nợ. Khi có DN mới, mô hình sẽ tính toán xác suất vỡ nợ dựa trên 14 chỉ số của DN đó.
+                </p>
+
+                <h4>📈 Quy trình huấn luyện:</h4>
+                <ol style="margin: 0.5rem 0; padding-left: 2rem;">
+                  <li>Chia dữ liệu thành tập Train (80%) và Test (20%)</li>
+                  <li>Huấn luyện 3 mô hình cơ sở trên tập Train</li>
+                  <li>Sử dụng Logistic Regression để kết hợp kết quả (Stacking)</li>
+                  <li>Đánh giá hiệu năng trên tập Test bằng Accuracy và AUC</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-TAB: Cảnh báo rủi ro sớm -->
+          <div v-if="trainSubTab === 'early-warning'">
+            <!-- Hướng dẫn -->
+            <div class="training-guide">
+              <span class="guide-icon">📖</span>
+              <div class="guide-text">
+                <strong>Hướng dẫn:</strong> Tải file dữ liệu 1300 DN với cột 'label' (0=không vỡ nợ, 1=vỡ nợ).
+                Mô hình sẽ sử dụng Stacking + K-Means để phân nhóm và cảnh báo sớm các doanh nghiệp có nguy cơ cao.
+              </div>
+            </div>
+
+            <h3 style="color: #FF9800; margin: 1.5rem 0 1rem 0; font-size: 1.3rem;">⚠️ Huấn luyện Mô hình Cảnh báo Rủi ro Sớm</h3>
+
+            <!-- BƯỚC 1: Upload Model Training Data -->
+            <div class="early-warning-section" style="margin: 2rem 0;">
+              <h3 class="section-title" style="color: #FF9800; font-size: 1.3rem; margin-bottom: 1rem;">
+                🔄 Train Model với dữ liệu 1300 DN
+              </h3>
+
+              <div class="upload-area" @click="$refs.ewTrainFileInput.click()">
+                <div class="upload-icon">📊</div>
+                <p class="upload-text">{{ ewTrainFileName || 'Tải file Excel/CSV chứa 1300 DN' }}</p>
+                <p class="upload-hint">
+                  File cần có 14 cột (X_1 → X_14) + cột 'label' (0=không vỡ nợ, 1=vỡ nợ)
+                </p>
+              </div>
+
+              <input
+                ref="ewTrainFileInput"
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                @change="handleEWTrainFile"
+                style="display: none"
+              />
+
+              <button
+                @click="trainEarlyWarningModel"
+                class="btn btn-primary"
+                :disabled="!ewTrainFile || isEWTraining"
+                style="margin-top: 1rem; width: 100%;"
+              >
+                {{ isEWTraining ? '⏳ Đang huấn luyện mô hình...' : '🔄 Huấn luyện Mô hình Cảnh báo Sớm' }}
+              </button>
+
+              <!-- Kết quả training -->
+              <div v-if="ewTrainResult" style="margin-top: 1.5rem;">
+                <h4 style="color: #10B981; font-size: 1.1rem; margin-bottom: 1rem;">✅ Model đã được train thành công!</h4>
+                <div class="training-result-box">
+                  <p><strong>📊 Số mẫu:</strong> {{ ewTrainResult.num_samples }} (Tốt: {{ ewTrainResult.num_healthy }}, Vỡ nợ: {{ ewTrainResult.num_default }})</p>
+
+                  <div style="margin-top: 1rem;">
+                    <strong>🎯 Top 5 Chỉ số Quan trọng nhất:</strong>
+                    <div class="feature-importance-list" style="margin-top: 0.5rem;">
+                      <div
+                        v-for="(value, key) in getTopFeatureImportances()"
+                        :key="key"
+                        class="feature-importance-item"
+                        style="margin-bottom: 0.5rem;"
+                      >
+                        <span style="font-weight: 600;">{{ key }}:</span>
+                        <div class="importance-bar" :style="{ width: value * 300 + 'px', background: '#FF9800', height: '20px', borderRadius: '4px', display: 'inline-block', marginLeft: '1rem' }"></div>
+                        <span style="margin-left: 0.5rem;">{{ (value * 100).toFixed(2) }}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p style="margin-top: 1rem;"><strong>🔍 Phân bố theo Nhóm:</strong></p>
+                  <div v-if="ewTrainResult.cluster_distribution" class="cluster-distribution">
+                    <span v-for="(count, cluster) in ewTrainResult.cluster_distribution" :key="cluster" style="margin-right: 1rem;">
+                      {{ cluster }}: {{ count }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mô tả mô hình -->
+            <div class="model-description-section" style="margin-top: 3rem;">
+              <h3 style="color: #FF9800; margin-bottom: 1rem;">🧠 Về Mô hình Cảnh báo Rủi ro Sớm</h3>
+
+              <div class="model-info-card">
+                <h4>📊 Các mô hình được sử dụng:</h4>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                  <li><strong>Stacking Ensemble:</strong> Kết hợp Logistic, Random Forest, XGBoost để dự báo PD chính xác</li>
+                  <li><strong>K-Means Clustering:</strong> Phân nhóm doanh nghiệp theo đặc điểm tài chính</li>
+                  <li><strong>AI:</strong> Phân tích chuyên sâu và đưa ra khuyến nghị cụ thể</li>
+                </ul>
+
+                <h4>🎯 Mục đích sử dụng:</h4>
+                <p style="margin: 0.5rem 0;">
+                  Phát hiện sớm các doanh nghiệp có dấu hiệu xấu đi về tài chính, giúp ngân hàng can thiệp kịp thời
+                  trước khi doanh nghiệp rơi vào tình trạng vỡ nợ. Hệ thống cung cấp cảnh báo theo 3 mức độ: 🟢 Tốt, 🟡 Cảnh báo, 🔴 Nguy hiểm.
+                </p>
+
+                <h4>⚙️ Cách hoạt động:</h4>
+                <p style="margin: 0.5rem 0;">
+                  Mô hình kết hợp 2 phương pháp: (1) Dự báo PD bằng Stacking để đánh giá rủi ro hiện tại,
+                  (2) Phân cụm K-Means để so sánh DN với các nhóm DN tương tự. DN ở nhóm có tỷ lệ vỡ nợ cao sẽ được cảnh báo đỏ.
+                </p>
+
+                <h4>📈 Quy trình huấn luyện:</h4>
+                <ol style="margin: 0.5rem 0; padding-left: 2rem;">
+                  <li>Train mô hình Stacking trên 1300 DN lịch sử</li>
+                  <li>Áp dụng K-Means để chia DN thành 5 nhóm (clusters)</li>
+                  <li>Tính tỷ lệ vỡ nợ trung bình cho từng cluster</li>
+                  <li>Lưu trữ Feature Importance để xác định chỉ số quan trọng nhất</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-TAB: Phát hiện gian lận -->
+          <div v-if="trainSubTab === 'anomaly'">
+            <!-- Hướng dẫn -->
+            <div class="training-guide">
+              <span class="guide-icon">📖</span>
+              <div class="guide-text">
+                <strong>Hướng dẫn:</strong> Tải file dữ liệu 1300 DN để train mô hình Isolation Forest.
+                Mô hình sẽ học các ngưỡng an toàn của các doanh nghiệp khỏe mạnh và phát hiện những bất thường nghi ngờ gian lận.
+              </div>
+            </div>
+
+            <h3 style="color: #4CAF50; margin: 1.5rem 0 1rem 0; font-size: 1.3rem;">🚨 Huấn luyện Mô hình Phát hiện Gian lận</h3>
+
+            <!-- BƯỚC 1: Upload Model Training Data -->
+            <div class="anomaly-section" style="margin: 2rem 0;">
+              <h3 class="section-title" style="color: #4CAF50; font-size: 1.3rem; margin-bottom: 1rem;">
+                🔄 Train Model Phát hiện Bất thường
+              </h3>
+
+              <div class="upload-area" @click="$refs.anomalyTrainFileInput.click()" style="cursor: pointer;">
+                <div class="upload-icon">📊</div>
+                <p class="upload-text">{{ anomalyTrainFileName || 'Tải lên file dữ liệu 1300 DN (CSV/Excel)' }}</p>
+                <p class="upload-hint">
+                  File phải có 14 chỉ số (X_1 → X_14) + cột 'label' (0=khỏe mạnh, 1=vỡ nợ)
+                </p>
+              </div>
+              <input
+                ref="anomalyTrainFileInput"
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                @change="handleAnomalyTrainFile"
+                style="display: none"
+              />
+
+              <button
+                @click="trainAnomalyModel"
+                class="btn btn-primary"
+                :disabled="!anomalyTrainFile || isAnomalyTraining"
+                style="margin-top: 1rem; width: 100%;"
+              >
+                {{ isAnomalyTraining ? '⏳ Đang train model...' : '🚀 Train Model Phát hiện Bất thường' }}
+              </button>
+
+              <!-- Training Results -->
+              <div v-if="anomalyTrainResult" style="margin-top: 1.5rem;">
+                <h4 style="color: #10B981; font-size: 1.1rem; margin-bottom: 1rem;">✅ Model đã train thành công!</h4>
+
+                <!-- Feature Statistics Table -->
+                <div style="overflow-x: auto; margin-top: 1rem;">
+                  <h5 style="color: #4CAF50; margin-bottom: 0.5rem;">📊 Ngưỡng an toàn của 14 chỉ số (từ DN khỏe mạnh):</h5>
+                  <table class="indicators-table" style="font-size: 0.85rem;">
+                    <thead>
+                      <tr>
+                        <th>Chỉ số</th>
+                        <th>P5</th>
+                        <th>P50 (Trung vị)</th>
+                        <th>P95</th>
+                        <th>Mean</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="stat in anomalyTrainResult.feature_statistics" :key="stat.feature">
+                        <td>
+                          <div style="font-weight: 600;">{{ stat.feature }}</div>
+                          <div style="font-size: 0.8rem; color: #666;">{{ stat.name }}</div>
+                        </td>
+                        <td>{{ stat.P5 }}</td>
+                        <td style="font-weight: 600;">{{ stat.P50 }}</td>
+                        <td>{{ stat.P95 }}</td>
+                        <td>{{ stat.mean }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <p style="margin-top: 1rem; color: #666;">
+                  <strong>Contamination Rate:</strong> {{ (anomalyTrainResult.contamination_rate * 100).toFixed(1) }}%
+                  (Model giả định {{ (anomalyTrainResult.contamination_rate * 100).toFixed(1) }}% DN là bất thường)
+                </p>
+              </div>
+            </div>
+
+            <!-- Mô tả mô hình -->
+            <div class="model-description-section" style="margin-top: 3rem;">
+              <h3 style="color: #4CAF50; margin-bottom: 1rem;">🧠 Về Mô hình Phát hiện Gian lận</h3>
+
+              <div class="model-info-card">
+                <h4>📊 Mô hình được sử dụng:</h4>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                  <li><strong>Isolation Forest:</strong> Thuật toán phát hiện bất thường (Anomaly Detection) hiệu quả cao</li>
+                  <li><strong>Contamination Rate:</strong> Tự động tính tỷ lệ dự kiến DN bất thường trong tổng thể</li>
+                  <li><strong>AI:</strong> Phân tích sâu các chỉ số bất thường và đưa ra nhận định</li>
+                </ul>
+
+                <h4>🎯 Mục đích sử dụng:</h4>
+                <p style="margin: 0.5rem 0;">
+                  Phát hiện các doanh nghiệp có chỉ số tài chính bất thường, nghi ngờ gian lận hoặc khai báo sai lệch.
+                  Giúp ngân hàng tránh được các khoản vay có nguy cơ cao bị lừa đảo hoặc thông tin giả mạo.
+                </p>
+
+                <h4>⚙️ Cách hoạt động:</h4>
+                <p style="margin: 0.5rem 0;">
+                  Isolation Forest xây dựng các cây quyết định ngẫu nhiên. Các điểm dữ liệu bất thường sẽ bị "cô lập" nhanh hơn
+                  (ít phân nhánh hơn) so với điểm bình thường. Mô hình tính Anomaly Score cho mỗi DN, điểm càng cao càng bất thường.
+                  Sau đó so sánh từng chỉ số với ngưỡng an toàn (P5-P95) để xác định chỉ số nào bị lệch.
+                </p>
+
+                <h4>📈 Quy trình huấn luyện:</h4>
+                <ol style="margin: 0.5rem 0; padding-left: 2rem;">
+                  <li>Lọc ra các DN khỏe mạnh (label=0) từ 1300 DN</li>
+                  <li>Tính các ngưỡng phân vị (P5, P50, P95) và mean cho 14 chỉ số</li>
+                  <li>Train Isolation Forest trên toàn bộ dữ liệu với contamination rate tự động</li>
+                  <li>Lưu trữ model và ngưỡng để sử dụng cho prediction</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-TAB: Phân tích sống sót -->
+          <div v-if="trainSubTab === 'survival'">
+            <!-- Hướng dẫn -->
+            <div class="training-guide">
+              <span class="guide-icon">📖</span>
+              <div class="guide-text">
+                <strong>Hướng dẫn:</strong> Tải file CSV/Excel có cột months_to_default và event (0=censored, 1=vỡ nợ).
+                Mô hình Cox Proportional Hazards và Random Survival Forest sẽ được train để dự báo thời gian sống sót của doanh nghiệp.
+              </div>
+            </div>
+
+            <h3 style="color: #9C27B0; margin: 1.5rem 0 1rem 0; font-size: 1.3rem;">⏳ Huấn luyện Mô hình Phân tích Sống sót</h3>
+
+            <!-- Hướng dẫn Training -->
+            <div style="background: white; padding: 1rem; border-radius: 8px; margin: 1.5rem 0; border-left: 4px solid #9C27B0;">
+              <p style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #333;">
+                <strong>📋 Yêu cầu dữ liệu training:</strong>
+              </p>
+              <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0; font-size: 0.9rem; color: #666;">
+                <li>File CSV hoặc Excel với các cột: <strong>X_1, X_2, ..., X_14, months_to_default, event</strong></li>
+                <li><strong>months_to_default:</strong> Số tháng từ thời điểm đánh giá đến khi vỡ nợ (hoặc thời gian quan sát)</li>
+                <li><strong>event:</strong> 0 = không vỡ nợ (censored), 1 = vỡ nợ (event occurred)</li>
+                <li>Dữ liệu lịch sử của nhiều doanh nghiệp (tối thiểu 50-100 mẫu)</li>
+              </ul>
+            </div>
+
+            <!-- Upload Training File -->
+            <div style="margin-bottom: 1.5rem;">
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #9C27B0;">
+                📂 Upload File Training Data:
+              </label>
+              <div class="upload-area" @click="$refs.survivalTrainInput.click()" style="border: 2px dashed #9C27B0; background: white;">
+                <div class="upload-icon" style="color: #9C27B0;">📊</div>
+                <p class="upload-text">{{ survivalTrainFileName || 'Tải lên file CSV/Excel chứa dữ liệu training' }}</p>
+                <p class="upload-hint" style="color: #9C27B0;">
+                  File phải có cột: X_1 → X_14, months_to_default, event
+                </p>
+              </div>
+              <input
+                ref="survivalTrainInput"
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                @change="handleSurvivalTrainFile"
+                style="display: none"
+              />
+            </div>
+
+            <!-- Training Button -->
+            <button
+              @click="trainSurvivalModel"
+              class="btn btn-primary"
+              :disabled="isSurvivalTraining || !survivalTrainFile"
+              style="width: 100%; background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%); font-size: 1.1rem; padding: 1rem;"
+            >
+              {{ isSurvivalTraining ? '⏳ Đang huấn luyện mô hình...' : '🎓 Huấn luyện Mô hình Cox PH & RSF' }}
+            </button>
+
+            <!-- Training Results -->
+            <div v-if="survivalTrainResult" style="margin-top: 1.5rem;">
+              <div style="background: white; border-radius: 12px; padding: 1.5rem; border: 2px solid #4CAF50;">
+                <h4 style="color: #2E7D32; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="font-size: 1.5rem;">✅</span>
+                  Kết quả Huấn luyện
+                </h4>
+
+                <!-- Cox Model Metrics -->
+                <div v-if="survivalTrainResult.cox_model" style="margin-bottom: 1rem;">
+                  <h5 style="color: #1976D2; margin: 0 0 0.5rem 0; font-size: 1rem;">
+                    📊 Cox Proportional Hazards Model:
+                  </h5>
+                  <div style="background: #E3F2FD; padding: 1rem; border-radius: 8px;">
+                    <p style="margin: 0.3rem 0; font-size: 0.9rem;">
+                      <strong>Concordance Index (C-index):</strong>
+                      <span style="color: #1565C0; font-weight: bold; font-size: 1.1rem;">
+                        {{ survivalTrainResult.cox_model.c_index.toFixed(4) }}
+                      </span>
+                      <span style="color: #666; font-size: 0.85rem; margin-left: 0.5rem;">
+                        ({{ survivalTrainResult.cox_model.c_index > 0.7 ? '✅ Tốt' : survivalTrainResult.cox_model.c_index > 0.6 ? '⚠️ Trung bình' : '❌ Cần cải thiện' }})
+                      </span>
+                    </p>
+                    <p style="margin: 0.3rem 0; font-size: 0.9rem;">
+                      <strong>Log Likelihood:</strong>
+                      <span style="color: #1565C0;">{{ survivalTrainResult.cox_model.log_likelihood.toFixed(2) }}</span>
+                    </p>
+                    <p style="margin: 0.3rem 0; font-size: 0.9rem;">
+                      <strong>Số mẫu training:</strong>
+                      <span style="color: #1565C0;">{{ survivalTrainResult.cox_model.n_samples }}</span>
+                    </p>
+                    <p style="margin: 0.3rem 0; font-size: 0.9rem;">
+                      <strong>Số features:</strong>
+                      <span style="color: #1565C0;">{{ survivalTrainResult.cox_model.n_features }}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <!-- RSF Model Metrics -->
+                <div v-if="survivalTrainResult.rsf_model" style="margin-bottom: 1rem;">
+                  <h5 style="color: #7B1FA2; margin: 0 0 0.5rem 0; font-size: 1rem;">
+                    🌲 Random Survival Forest Model:
+                  </h5>
+                  <div style="background: #F3E5F5; padding: 1rem; border-radius: 8px;">
+                    <p style="margin: 0.3rem 0; font-size: 0.9rem;">
+                      <strong>Concordance Index (C-index):</strong>
+                      <span style="color: #7B1FA2; font-weight: bold; font-size: 1.1rem;">
+                        {{ survivalTrainResult.rsf_model.c_index.toFixed(4) }}
+                      </span>
+                      <span style="color: #666; font-size: 0.85rem; margin-left: 0.5rem;">
+                        ({{ survivalTrainResult.rsf_model.c_index > 0.7 ? '✅ Tốt' : survivalTrainResult.rsf_model.c_index > 0.6 ? '⚠️ Trung bình' : '❌ Cần cải thiện' }})
+                      </span>
+                    </p>
+                    <p style="margin: 0.3rem 0; font-size: 0.9rem;">
+                      <strong>Số cây (n_estimators):</strong>
+                      <span style="color: #7B1FA2;">{{ survivalTrainResult.rsf_model.n_estimators }}</span>
+                    </p>
+                    <p style="margin: 0.3rem 0; font-size: 0.9rem;">
+                      <strong>Số mẫu training:</strong>
+                      <span style="color: #7B1FA2;">{{ survivalTrainResult.rsf_model.n_samples }}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Kaplan-Meier Baseline -->
+                <div v-if="survivalTrainResult.kaplan_meier" style="margin-bottom: 1rem;">
+                  <h5 style="color: #9C27B0; margin: 0 0 0.5rem 0; font-size: 1rem;">
+                    📈 Kaplan-Meier Baseline Survival:
+                  </h5>
+                  <div style="background: #F3E5F5; padding: 1rem; border-radius: 8px;">
+                    <p style="margin: 0.3rem 0; font-size: 0.9rem;">
+                      <strong>Timeline:</strong>
+                      <span style="color: #7B1FA2;">
+                        0 → {{ Math.max(...survivalTrainResult.kaplan_meier.timeline) }} tháng
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mô tả mô hình -->
+            <div class="model-description-section" style="margin-top: 3rem;">
+              <h3 style="color: #9C27B0; margin-bottom: 1rem;">🧠 Về Mô hình Phân tích Sống sót</h3>
+
+              <div class="model-info-card">
+                <h4>📊 Các mô hình được sử dụng:</h4>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                  <li><strong>Cox Proportional Hazards (Cox PH):</strong> Mô hình thống kê đánh giá ảnh hưởng của các chỉ số lên rủi ro vỡ nợ</li>
+                  <li><strong>Random Survival Forest (RSF):</strong> Mô hình Machine Learning tổng quát hóa tốt hơn với dữ liệu phức tạp</li>
+                  <li><strong>Kaplan-Meier:</strong> Đường cong sống sót baseline để so sánh</li>
+                </ul>
+
+                <h4>🎯 Mục đích sử dụng:</h4>
+                <p style="margin: 0.5rem 0;">
+                  Dự báo thời gian sống sót của doanh nghiệp - tức là khoảng thời gian doanh nghiệp có thể duy trì hoạt động
+                  trước khi rơi vào vỡ nợ. Giúp ngân hàng đánh giá rủi ro theo thời gian và lập kế hoạch dài hạn.
+                </p>
+
+                <h4>⚙️ Cách hoạt động:</h4>
+                <p style="margin: 0.5rem 0;">
+                  Cox PH tính Hazard Ratio cho từng chỉ số - đo lường mức độ ảnh hưởng của chỉ số đó lên nguy cơ vỡ nợ.
+                  HR > 1 nghĩa là chỉ số càng cao thì rủi ro càng cao. RSF xây dựng nhiều cây quyết định về thời gian sống sót,
+                  sau đó tổng hợp để dự báo đường cong survival cho DN mới.
+                </p>
+
+                <h4>📈 Quy trình huấn luyện:</h4>
+                <ol style="margin: 0.5rem 0; padding-left: 2rem;">
+                  <li>Chuẩn bị dữ liệu: X_1-X_14, months_to_default (time), event (status)</li>
+                  <li>Train Cox PH model và tính Hazard Ratios cho 14 chỉ số</li>
+                  <li>Train Random Survival Forest với 100 cây</li>
+                  <li>Đánh giá bằng Concordance Index (C-index ≈ AUC cho survival)</li>
+                  <li>Tính Kaplan-Meier baseline survival curve</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-TAB: Huấn luyện tất cả -->
+          <div v-if="trainSubTab === 'all'">
+            <!-- Hướng dẫn sử dụng -->
+            <div class="training-guide" style="background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%); border-left: 4px solid #4CAF50; padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0;">
+              <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                <span class="guide-icon" style="font-size: 2rem;">📖</span>
+                <div>
+                  <h4 style="color: #2E7D32; margin: 0 0 0.5rem 0; font-size: 1.1rem;">📖 Hướng dẫn sử dụng</h4>
+                  <p style="margin: 0.5rem 0; font-size: 0.95rem; line-height: 1.6;">
+                    Tính năng này cho phép bạn huấn luyện tất cả 4 mô hình (Dự báo PD, Cảnh báo rủi ro sớm, Phát hiện gian lận, Phân tích sống sót) một cách tự động và tuần tự.
+                  </p>
+                  <ol style="margin: 0.5rem 0 0 1.5rem; padding: 0; font-size: 0.95rem; line-height: 1.8;">
+                    <li><strong>Bước 1:</strong> Tải lên file dữ liệu cho từng mô hình bên dưới</li>
+                    <li><strong>Bước 2:</strong> Nhấn nút "Huấn luyện Tất cả Mô hình"</li>
+                    <li><strong>Bước 3:</strong> Hệ thống sẽ tự động huấn luyện tuần tự từng mô hình</li>
+                    <li><strong>Bước 4:</strong> Khi hoàn thành, bạn sẽ thấy thông báo và có thể sử dụng tất cả tính năng</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <h3 style="color: #1976D2; margin: 1.5rem 0 1rem 0; font-size: 1.3rem; text-align: center;">🚀 Huấn luyện Tất cả Mô hình</h3>
+
+            <!-- Upload files cho các mô hình -->
+            <div style="margin: 2rem 0;">
+              <!-- 1. Dự báo PD -->
+              <div style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 2px solid #FF6B9D;">
+                <h4 style="color: #FF6B9D; margin: 0 0 1rem 0; font-size: 1.1rem;">
+                  🔮 1. Huấn luyện Dự báo PD
+                </h4>
+                <div class="upload-area" @click="$refs.allTrainPDInput.click()" style="cursor: pointer; border: 2px dashed #FF6B9D;">
+                  <div class="upload-icon" style="color: #FF6B9D;">📊</div>
+                  <p class="upload-text">{{ allTrainPDFileName || 'Tải lên file CSV (X_1 → X_14 + cột default)' }}</p>
+                </div>
+                <input
+                  ref="allTrainPDInput"
+                  type="file"
+                  accept=".csv"
+                  @change="handleAllTrainPDFile"
+                  style="display: none"
+                />
+              </div>
+
+              <!-- 2. Cảnh báo rủi ro sớm -->
+              <div style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 2px solid #FF9800;">
+                <h4 style="color: #FF9800; margin: 0 0 1rem 0; font-size: 1.1rem;">
+                  ⚠️ 2. Huấn luyện Cảnh báo Rủi ro Sớm
+                </h4>
+                <div class="upload-area" @click="$refs.allTrainEWInput.click()" style="cursor: pointer; border: 2px dashed #FF9800;">
+                  <div class="upload-icon" style="color: #FF9800;">📊</div>
+                  <p class="upload-text">{{ allTrainEWFileName || 'Tải lên file CSV/Excel (1300 DN, X_1 → X_14 + cột label)' }}</p>
+                </div>
+                <input
+                  ref="allTrainEWInput"
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  @change="handleAllTrainEWFile"
+                  style="display: none"
+                />
+              </div>
+
+              <!-- 3. Phát hiện gian lận -->
+              <div style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 2px solid #4CAF50;">
+                <h4 style="color: #4CAF50; margin: 0 0 1rem 0; font-size: 1.1rem;">
+                  🚨 3. Huấn luyện Phát hiện Gian lận
+                </h4>
+                <div class="upload-area" @click="$refs.allTrainAnomalyInput.click()" style="cursor: pointer; border: 2px dashed #4CAF50;">
+                  <div class="upload-icon" style="color: #4CAF50;">📊</div>
+                  <p class="upload-text">{{ allTrainAnomalyFileName || 'Tải lên file CSV/Excel (1300 DN, X_1 → X_14 + cột label)' }}</p>
+                </div>
+                <input
+                  ref="allTrainAnomalyInput"
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  @change="handleAllTrainAnomalyFile"
+                  style="display: none"
+                />
+              </div>
+
+              <!-- 4. Phân tích sống sót -->
+              <div style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 2px solid #9C27B0;">
+                <h4 style="color: #9C27B0; margin: 0 0 1rem 0; font-size: 1.1rem;">
+                  ⏳ 4. Huấn luyện Phân tích Sống sót
+                </h4>
+                <div class="upload-area" @click="$refs.allTrainSurvivalInput.click()" style="cursor: pointer; border: 2px dashed #9C27B0;">
+                  <div class="upload-icon" style="color: #9C27B0;">📊</div>
+                  <p class="upload-text">{{ allTrainSurvivalFileName || 'Tải lên file CSV/Excel (X_1 → X_14, months_to_default, event)' }}</p>
+                </div>
+                <input
+                  ref="allTrainSurvivalInput"
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  @change="handleAllTrainSurvivalFile"
+                  style="display: none"
+                />
+              </div>
+            </div>
+
+            <!-- Nút Huấn luyện Tất cả -->
+            <button
+              @click="trainAllModels"
+              class="btn btn-primary"
+              :disabled="!canTrainAll || isTrainingAll"
+              style="width: 100%; padding: 1.5rem; font-size: 1.2rem; font-weight: 700; margin: 2rem 0; background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%); border: none;"
+            >
+              {{ isTrainingAll ? '⏳ Đang huấn luyện... (' + currentTrainingStep + '/4)' : '🚀 Huấn luyện Tất cả Mô hình' }}
+            </button>
+
+            <!-- Progress -->
+            <div v-if="isTrainingAll" style="margin: 2rem 0;">
+              <div style="background: #E3F2FD; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #2196F3;">
+                <h4 style="color: #1976D2; margin: 0 0 1rem 0;">📊 Tiến độ huấn luyện:</h4>
+                <div style="margin: 0.5rem 0;" v-for="(log, index) in trainingLogs" :key="index">
+                  <span style="color: #666;">{{ log }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Kết quả cuối cùng -->
+            <div v-if="allTrainingComplete" style="margin: 3rem 0;">
+              <div style="background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%); padding: 3rem 2rem; border-radius: 16px; border: 4px solid #4CAF50; text-align: center; box-shadow: 0 8px 24px rgba(76, 175, 80, 0.3);">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+                <h3 style="color: #2E7D32; margin: 0 0 1rem 0; font-size: 1.8rem; font-weight: 900;">
+                  Tất cả các mô hình đã được huấn luyện xong!
+                </h3>
+                <p style="color: #388E3C; font-size: 1.2rem; margin: 1rem 0; font-weight: 600; line-height: 1.8;">
+                  🎉 Bạn có thể sử dụng tất cả các tính năng của Chương trình: Dự báo PD, Cảnh báo rủi ro sớm, Phát hiện gian lận, và Phân tích sống sót.
+                </p>
+                <div style="margin-top: 2rem; padding: 1rem; background: white; border-radius: 8px;">
+                  <p style="color: #666; font-size: 0.95rem; margin: 0;">
+                    <strong>Tổng kết:</strong>
+                  </p>
+                  <ul style="list-style: none; padding: 0; margin: 0.5rem 0 0 0; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    <li style="margin: 0.5rem 0;">✅ Mô hình Dự báo PD</li>
+                    <li style="margin: 0.5rem 0;">✅ Mô hình Cảnh báo Rủi ro Sớm</li>
+                    <li style="margin: 0.5rem 0;">✅ Mô hình Phát hiện Gian lận</li>
+                    <li style="margin: 0.5rem 0;">✅ Mô hình Phân tích Sống sót</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ TAB CONTENT: Cảnh báo Rủi ro Sớm (Early Warning System) -->
+      <div v-if="activeTab === 'early-warning'" class="tab-content">
+        <div class="card early-warning-card">
+          <h2 class="card-title early-warning-title">⚠️ Hệ thống Cảnh báo Rủi ro Sớm</h2>
+
+          <!-- Hướng dẫn sử dụng -->
+          <div class="info-note" style="background: linear-gradient(135deg, #FFF5F5 0%, #FFE4E1 100%); border-left: 4px solid #FF6B6B;">
+            <span class="note-icon">📋</span>
+            <span class="note-text">
+              Hệ thống sử dụng ML (Stacking + K-Means + AI) để chẩn đoán sức khỏe tài chính doanh nghiệp.
+              <br><strong>Lưu ý:</strong> Vui lòng huấn luyện mô hình ở Tab "Huấn luyện mô hình" trước khi sử dụng tính năng này.
+              <br><strong>Bước 1:</strong> Upload DN cần kiểm tra →
+              <strong>Bước 2:</strong> Chọn ngành nghề DN →
+              <strong>Bước 3:</strong> Nhấn nút "Chẩn đoán Rủi ro" để xem bảng 14 chỉ số tài chính và kết quả chẩn đoán chi tiết.
+            </span>
+          </div>
+
+          <!-- Upload DN cần kiểm tra -->
+          <div class="early-warning-section" style="margin: 3rem 0;">
+            <h3 class="section-title" style="color: #FF6B6B; font-size: 1.3rem; margin-bottom: 1rem;">
+              🩺 Bước 1: Upload DN cần kiểm tra
+            </h3>
+
+            <!-- Sub-tabs: Upload file vs Dùng dữ liệu từ Tab Dự báo PD -->
+            <div class="sub-tabs-container" style="margin: 1rem 0;">
+              <button
+                @click="ewCheckMode = 'upload'"
+                class="sub-tab-button"
+                :class="{ active: ewCheckMode === 'upload' }"
+              >
+                📤 Upload File Mới
+              </button>
+              <button
+                @click="ewCheckMode = 'from-predict'"
+                class="sub-tab-button"
+                :class="{ active: ewCheckMode === 'from-predict' }"
+                :disabled="!indicatorsDict"
+              >
+                🔗 Dùng dữ liệu từ Tab Dự báo PD
+              </button>
+            </div>
+
+            <!-- Mode: Upload File Mới -->
+            <div v-if="ewCheckMode === 'upload'">
+              <div class="upload-area" @click="$refs.ewCheckFileInput.click()">
+                <div class="upload-icon">📄</div>
+                <p class="upload-text">{{ ewCheckFileName || 'Tải file XLSX của DN cần kiểm tra' }}</p>
+                <p class="upload-hint">
+                  File XLSX phải có 3 sheets: CDKT, BCTN, LCTT
+                </p>
+              </div>
+
+              <input
+                ref="ewCheckFileInput"
+                type="file"
+                accept=".xlsx,.xls"
+                @change="handleEWCheckFile"
+                style="display: none"
+              />
+            </div>
+
+            <!-- Mode: Dùng dữ liệu từ Tab Dự báo PD -->
+            <div v-if="ewCheckMode === 'from-predict' && indicatorsDict">
+              <div class="success-box" style="background: #E8F5E9; border: 2px solid #4CAF50; padding: 1rem; border-radius: 8px;">
+                <p style="color: #2E7D32; font-weight: 600;">✅ Sẽ sử dụng 14 chỉ số từ Tab Dự báo PD</p>
+              </div>
+            </div>
+
+            <!-- Chọn kỳ báo cáo (tùy chọn) -->
+            <div style="margin-top: 1.5rem;">
+              <label class="input-label">📅 Kỳ báo cáo (tùy chọn - chỉ để hiển thị):</label>
+              <select v-model="ewReportPeriod" class="input-field">
+                <option value="">-- Không chọn --</option>
+                <option value="Q1/2024">Q1/2024</option>
+                <option value="Q2/2024">Q2/2024</option>
+                <option value="Q3/2024">Q3/2024</option>
+                <option value="Q4/2024">Q4/2024</option>
+                <option value="6T1/2024">6 tháng đầu năm 2024</option>
+                <option value="6T2/2024">6 tháng cuối năm 2024</option>
+                <option value="2024">Năm 2024</option>
+              </select>
+            </div>
+
+            <!-- Chọn ngành -->
+            <div style="margin-top: 1rem;">
+              <label class="input-label">🏭 Chọn ngành nghề DN:</label>
+              <select v-model="ewIndustryCode" class="input-field">
+                <option value="manufacturing">🏭 Sản xuất (Manufacturing)</option>
+                <option value="export">📦 Xuất khẩu (Export)</option>
+                <option value="retail">🛒 Bán lẻ (Retail)</option>
+              </select>
+            </div>
+
+            <!-- Nút Chẩn đoán Rủi ro (tích hợp cả hiển thị bảng tính) -->
+            <button
+              @click="checkEarlyWarning"
+              class="btn btn-primary"
+              :disabled="(!ewCheckFile && ewCheckMode === 'upload' && !indicatorsDict) || isEWChecking"
+              style="margin-top: 1.5rem; width: 100%; font-size: 1.1rem; padding: 1rem;"
+            >
+              {{ isEWChecking ? '⏳ Đang chẩn đoán...' : '🩺 Chẩn đoán Rủi ro' }}
+            </button>
+          </div>
+
+          <!-- Hiển thị bảng 14 chỉ số tài chính (khi showEWIndicators = true) -->
+          <div v-if="showEWIndicators && ewIndicatorsArray.length > 0" style="margin: 3rem 0;">
+            <h3 style="margin-bottom: 1.5rem; color: #FF6B9D; text-align: center; font-size: 1.6rem;">
+              📈 14 Chỉ số Tài chính đã tính toán
+            </h3>
+            <div class="indicators-tables-container">
+              <!-- Bảng 1: X1-X7 -->
+              <div class="indicators-table-wrapper">
+                <h4 class="table-subtitle">Nhóm 1: Sinh lời & Thanh toán (X1-X7)</h4>
+                <table class="indicators-table">
+                  <thead>
+                    <tr>
+                      <th>Chỉ số</th>
+                      <th>Giá trị</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="indicator in ewIndicatorsArray.slice(0, 7)" :key="indicator.code">
+                      <td>
+                        <div class="indicator-code-cell">{{ indicator.code }}</div>
+                        <div class="indicator-name-cell">{{ indicator.name }}</div>
+                      </td>
+                      <td class="indicator-value-cell">{{ indicator.value.toFixed(4) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Bảng 2: X8-X14 -->
+              <div class="indicators-table-wrapper">
+                <h4 class="table-subtitle">Nhóm 2: Hiệu quả hoạt động (X8-X14)</h4>
+                <table class="indicators-table">
+                  <thead>
+                    <tr>
+                      <th>Chỉ số</th>
+                      <th>Giá trị</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="indicator in ewIndicatorsArray.slice(7, 14)" :key="indicator.code">
+                      <td>
+                        <div class="indicator-code-cell">{{ indicator.code }}</div>
+                        <div class="indicator-name-cell">{{ indicator.name }}</div>
+                      </td>
+                      <td class="indicator-value-cell">{{ indicator.value.toFixed(4) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hiển thị kết quả -->
+          <div v-if="ewCheckResult" class="early-warning-results" style="margin: 3rem 0;">
+            <h3 class="section-title" style="color: #FF1493; font-size: 1.5rem; margin-bottom: 2rem; text-align: center; font-weight: 900;">
+              📊 Bước 2: Kết quả Chẩn đoán
+            </h3>
+
+            <!-- Kỳ báo cáo -->
+            <div v-if="ewCheckResult.report_period" style="text-align: center; margin-bottom: 1.5rem;">
+              <span style="font-size: 1.1rem; color: #666;">📅 Kỳ báo cáo: <strong>{{ ewCheckResult.report_period }}</strong></span>
+            </div>
+
+            <!-- 1. Health Score Gauge -->
+            <div class="health-score-section" style="margin-bottom: 3rem;">
+              <h4 style="color: #FF6B9D; font-size: 1.2rem; margin-bottom: 1rem; text-align: center;">💚 Điểm Sức khỏe Tài chính</h4>
+              <div id="health-score-gauge" style="width: 100%; height: 300px;"></div>
+
+              <!-- Risk Level Badge -->
+              <div class="risk-level-badge" :style="{ backgroundColor: ewCheckResult.risk_level_color }">
+                {{ ewCheckResult.risk_level_icon }} {{ ewCheckResult.risk_level_text }}
+              </div>
+
+              <!-- Current PD -->
+              <div style="text-align: center; margin-top: 1rem; font-size: 1.1rem;">
+                <strong>PD hiện tại:</strong> <span :style="{ color: ewCheckResult.risk_level_color, fontSize: '1.3rem', fontWeight: 'bold' }">{{ ewCheckResult.current_pd.toFixed(2) }}%</span>
+              </div>
+            </div>
+
+            <!-- 2. Top 3 Điểm Yếu -->
+            <div class="weaknesses-section" style="margin-bottom: 3rem;">
+              <h4 style="color: #FF6B9D; font-size: 1.2rem; margin-bottom: 1rem;">⚠️ Top 3 Điểm Yếu Cần Cải Thiện</h4>
+              <div class="weakness-cards">
+                <div
+                  v-for="(weakness, index) in ewCheckResult.top_weaknesses"
+                  :key="index"
+                  class="weakness-card"
+                  :class="'severity-' + weakness.severity"
+                >
+                  <div class="weakness-header">
+                    <span class="weakness-number">#{{ index + 1 }}</span>
+                    <span class="weakness-name">{{ weakness.name }}</span>
+                  </div>
+                  <div class="weakness-body">
+                    <div class="weakness-values">
+                      <div class="weakness-value">
+                        <span class="value-label">Giá trị hiện tại:</span>
+                        <span class="value-number">{{ weakness.current_value.toFixed(4) }}</span>
+                      </div>
+                      <div class="weakness-value">
+                        <span class="value-label">Ngưỡng an toàn:</span>
+                        <span class="value-number">{{ weakness.safe_threshold.toFixed(4) }}</span>
+                      </div>
+                      <div class="weakness-value">
+                        <span class="value-label">Khoảng cách (Gap):</span>
+                        <span class="value-number" :style="{ color: weakness.gap < 0 ? '#EF4444' : '#10B981' }">
+                          {{ weakness.gap.toFixed(4) }}
+                        </span>
+                      </div>
+                      <div class="weakness-value">
+                        <span class="value-label">Percentile:</span>
+                        <span class="value-number">{{ weakness.percentile.toFixed(1) }}%</span>
+                      </div>
+                    </div>
+                    <!-- Mini bar chart cho gap -->
+                    <div class="weakness-gap-chart">
+                      <div class="gap-bar-container">
+                        <div
+                          class="gap-bar"
+                          :style="{
+                            width: Math.min(Math.abs(weakness.gap / weakness.safe_threshold) * 100, 100) + '%',
+                            backgroundColor: weakness.gap < 0 ? '#EF4444' : '#10B981'
+                          }"
+                        ></div>
+                      </div>
+                      <div class="gap-severity-label">{{ getSeverityLabel(weakness.severity) }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Cluster Position -->
+            <div class="cluster-section" style="margin-bottom: 3rem;">
+              <h4 style="color: #FF6B9D; font-size: 1.2rem; margin-bottom: 1rem;">📍 Vị trí trong 1300 DN</h4>
+              <div class="cluster-info-box">
+                <p style="font-size: 1.2rem; text-align: center; margin-bottom: 1rem;">
+                  Bạn thuộc <strong>{{ ewCheckResult.cluster_info.cluster_name }}</strong>
+                </p>
+                <p style="font-size: 1rem; text-align: center; margin-bottom: 1.5rem;">
+                  Xếp hạng <strong style="color: #FF6B9D; font-size: 1.3rem;">{{ ewCheckResult.cluster_info.position_percentile.toFixed(1) }}%</strong> trong 1300 DN
+                </p>
+                <p style="text-align: center; color: #666;">
+                  PD trung bình của cluster: {{ ewCheckResult.cluster_info.cluster_avg_pd.toFixed(2) }}%
+                </p>
+              </div>
+
+              <!-- Radar Chart: So sánh với median của cluster -->
+              <div id="cluster-radar-chart" style="width: 100%; height: 500px; margin-top: 1.5rem;"></div>
+            </div>
+
+            <!-- 4. PD Projection Timeline -->
+            <div class="pd-projection-section" style="margin-bottom: 3rem;">
+              <h4 style="color: #FF6B9D; font-size: 1.2rem; margin-bottom: 1rem;">📈 Dự báo PD Tương lai (3/6/12 tháng)</h4>
+              <div id="pd-projection-chart" style="width: 100%; height: 400px;"></div>
+            </div>
+
+            <!-- 5. AI Diagnosis -->
+            <div class="gemini-diagnosis-section" style="margin-bottom: 2rem;">
+              <h4 style="color: #FF1493; font-size: 1.3rem; margin-bottom: 1rem; text-align: center; font-weight: 900;">
+                🤖 Báo cáo Chẩn đoán từ AI
+              </h4>
+              <div class="gemini-diagnosis-box">
+                <div class="diagnosis-content" v-html="renderMarkdown(ewCheckResult.gemini_diagnosis)"></div>
+              </div>
+            </div>
+
+            <!-- Chatbot Button -->
+            <div style="margin-top: 2rem; text-align: center;">
+              <button
+                @click="openEWChatbot"
+                class="btn btn-accent"
+                style="padding: 0.8rem 2rem; font-size: 1rem;"
+              >
+                💬 Hỏi thêm chi tiết về kết quả chẩn đoán
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chatbot Component for Early Warning -->
+        <div v-if="showEWChatbot" class="chatbot-container">
+          <div class="chatbot-header">
+            <div class="chatbot-title">
+              <span class="chatbot-icon">🤖</span>
+              <span>Trợ lý ảo Agribank</span>
+            </div>
+            <button @click="closeEWChatbot" class="chatbot-close">✕</button>
+          </div>
+          <div class="chatbot-messages">
+            <div v-if="ewChatMessages.length === 0" class="chatbot-welcome">
+              <p>👋 Xin chào! Tôi là Trợ lý ảo Agribank.</p>
+              <p>Bạn có thể hỏi thêm về kết quả chẩn đoán vừa rồi.</p>
+            </div>
+            <div
+              v-for="(message, index) in ewChatMessages"
+              :key="index"
+              class="chat-message"
+              :class="{ 'user-message': message.role === 'user', 'assistant-message': message.role === 'assistant' }"
+            >
+              {{ message.content }}
+            </div>
+            <div v-if="isEWChatLoading" class="chat-loading">
+              <span class="loading-dot"></span>
+              <span class="loading-dot"></span>
+              <span class="loading-dot"></span>
+            </div>
+          </div>
+          <div class="chatbot-input">
+            <input
+              v-model="ewChatInput"
+              @keyup.enter="sendEWChatMessage"
+              type="text"
+              placeholder="Nhập câu hỏi của bạn..."
+              class="chat-input-field"
+            />
+            <button @click="sendEWChatMessage" class="chat-send-button" :disabled="!ewChatInput.trim() || isEWChatLoading">
+              ➤
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ TAB CONTENT: Phát hiện Gian lận (Anomaly Detection) -->
+      <div v-if="activeTab === 'anomaly'" class="tab-content">
+        <div class="card anomaly-card">
+          <h2 class="card-title" style="color: #FF4444;">🚨 Hệ thống Phát hiện Bất thường</h2>
+
+          <!-- Hướng dẫn sử dụng -->
+          <div class="info-note" style="background: linear-gradient(135deg, #FFF5F5 0%, #FFE4E1 100%); border-left: 4px solid #FF4444;">
+            <span class="note-icon">📋</span>
+            <span class="note-text">
+              <strong>Mục đích:</strong> Phát hiện doanh nghiệp có hành vi tài chính bất thường, nghi ngờ gian lận hoặc báo cáo sai lệch bằng Isolation Forest và AI.
+              <br><strong>Lưu ý:</strong> Vui lòng huấn luyện mô hình ở Tab "Huấn luyện mô hình" trước khi sử dụng tính năng này.
+              <br><strong>Cách sử dụng:</strong>
+              <strong>Bước 1:</strong> Upload DN cần kiểm tra hoặc dùng dữ liệu từ Tab Dự báo PD →
+              <strong>Bước 2:</strong> Xem kết quả phân tích bất thường chi tiết.
+            </span>
+          </div>
+
+          <!-- Upload DN cần kiểm tra -->
+          <div class="anomaly-section" style="margin: 3rem 0; border-top: 2px solid #FFE4E1; padding-top: 2rem;">
+            <h3 class="section-title" style="color: #FF4444; font-size: 1.3rem; margin-bottom: 1rem;">
+              🔍 Bước 1: Upload DN cần kiểm tra Bất thường
+            </h3>
+
+            <!-- Sub-tabs: Upload file vs Dùng dữ liệu từ Tab Dự báo PD -->
+            <div class="sub-tabs-container" style="margin: 1rem 0;">
+              <button
+                @click="anomalyDataSource = 'upload_file'"
+                class="sub-tab-button"
+                :class="{ active: anomalyDataSource === 'upload_file' }"
+              >
+                📤 Upload File Mới
+              </button>
+              <button
+                @click="anomalyDataSource = 'from_tab'"
+                class="sub-tab-button"
+                :class="{ active: anomalyDataSource === 'from_tab' }"
+                :disabled="!indicatorsDict"
+              >
+                🔗 Dùng dữ liệu từ Tab Dự báo PD
+              </button>
+            </div>
+
+            <!-- Mode: Upload File Mới -->
+            <div v-if="anomalyDataSource === 'upload_file'" style="margin-bottom: 1rem;">
+              <div class="upload-area" @click="$refs.anomalyCheckFileInput.click()" style="cursor: pointer;">
+                <div class="upload-icon">📄</div>
+                <p class="upload-text">{{ anomalyCheckFileName || 'Tải lên file XLSX của DN' }}</p>
+                <p class="upload-hint">File XLSX có 3 sheets: CDKT, BCTN, LCTT</p>
+              </div>
+              <input
+                ref="anomalyCheckFileInput"
+                type="file"
+                accept=".xlsx,.xls"
+                @change="handleAnomalyCheckFile"
+                style="display: none"
+              />
+            </div>
+
+            <!-- Mode: Dùng dữ liệu từ Tab Dự báo PD -->
+            <div v-if="anomalyDataSource === 'from_tab'" style="margin-bottom: 1rem;">
+              <div v-if="!indicatorsDict" class="info-note" style="background: #FFF9E6; border-left: 4px solid #FFC107;">
+                <span class="note-icon">⚠️</span>
+                <span class="note-text">
+                  Chưa có dữ liệu từ Tab Dự báo PD. Vui lòng vào Tab "🔮 Dự Báo PD" để tải file và tính toán 14 chỉ số trước.
+                </span>
+              </div>
+              <div v-else class="info-note" style="background: #E8F5E9; border-left: 4px solid #10B981;">
+                <span class="note-icon">✅</span>
+                <span class="note-text">
+                  Đã tải được 14 chỉ số từ Tab Dự báo PD. Nhấn "Kiểm tra Bất thường" để phân tích.
+                </span>
+              </div>
+            </div>
+
+            <button
+              @click="checkAnomaly"
+              class="btn btn-primary"
+              :disabled="!canCheckAnomaly || isAnomalyChecking"
+              style="width: 100%;"
+            >
+              {{ isAnomalyChecking ? '⏳ Đang kiểm tra...' : '🔍 Kiểm tra Bất thường' }}
+            </button>
+          </div>
+
+          <!-- Hiển thị bảng 14 chỉ số tài chính (khi showAnomalyIndicators = true) -->
+          <div v-if="showAnomalyIndicators && anomalyIndicatorsArray.length > 0" style="margin: 3rem 0;">
+            <h3 style="margin-bottom: 1.5rem; color: #FF6B9D; text-align: center; font-size: 1.6rem;">
+              📈 14 Chỉ số Tài chính đã tính toán
+            </h3>
+            <div class="indicators-tables-container">
+              <!-- Bảng 1: X1-X7 -->
+              <div class="indicators-table-wrapper">
+                <h4 class="table-subtitle">Nhóm 1: Sinh lời & Thanh toán (X1-X7)</h4>
+                <table class="indicators-table">
+                  <thead>
+                    <tr>
+                      <th>Chỉ số</th>
+                      <th>Giá trị</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="indicator in anomalyIndicatorsArray.slice(0, 7)" :key="indicator.code">
+                      <td>
+                        <div class="indicator-code-cell">{{ indicator.code }}</div>
+                        <div class="indicator-name-cell">{{ indicator.name }}</div>
+                      </td>
+                      <td class="indicator-value-cell">{{ indicator.value.toFixed(4) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Bảng 2: X8-X14 -->
+              <div class="indicators-table-wrapper">
+                <h4 class="table-subtitle">Nhóm 2: Hiệu quả hoạt động (X8-X14)</h4>
+                <table class="indicators-table">
+                  <thead>
+                    <tr>
+                      <th>Chỉ số</th>
+                      <th>Giá trị</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="indicator in anomalyIndicatorsArray.slice(7, 14)" :key="indicator.code">
+                      <td>
+                        <div class="indicator-code-cell">{{ indicator.code }}</div>
+                        <div class="indicator-name-cell">{{ indicator.name }}</div>
+                      </td>
+                      <td class="indicator-value-cell">{{ indicator.value.toFixed(4) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kết quả -->
+          <div v-if="anomalyCheckResult" class="anomaly-section" style="margin: 3rem 0; border-top: 2px solid #FFE4E1; padding-top: 2rem;">
+            <h3 class="section-title" style="color: #FF4444; font-size: 1.3rem; margin-bottom: 1.5rem; text-align: center;">
+              📊 Bước 2: Kết quả Phân tích Bất thường
+            </h3>
+
+            <!-- Anomaly Score Gauge -->
+            <div style="margin-bottom: 2rem;">
+              <h4 style="color: #FF4444; font-size: 1.1rem; margin-bottom: 1rem; text-align: center;">
+                🎯 Điểm Bất thường (Anomaly Score)
+              </h4>
+              <div id="anomaly-score-gauge" class="anomaly-score-gauge" style="width: 100%; height: 300px;"></div>
+            </div>
+
+            <!-- Risk Level Badge -->
+            <div style="margin: 2rem 0; text-align: center;">
+              <div class="risk-level-badge" :style="{
+                background: anomalyCheckResult.risk_level_color,
+                color: 'white',
+                padding: '1.5rem 3rem',
+                borderRadius: '16px',
+                fontSize: '1.5rem',
+                fontWeight: '700',
+                display: 'inline-block',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+              }">
+                {{ anomalyCheckResult.risk_level_icon }} {{ anomalyCheckResult.risk_level }}
+              </div>
+            </div>
+
+            <!-- Abnormal Features Table -->
+            <div v-if="anomalyCheckResult.abnormal_features.length > 0" style="margin: 2rem 0;">
+              <h4 style="color: #FF4444; font-size: 1.1rem; margin-bottom: 1rem;">
+                ⚠️ Các chỉ số Bất thường ({{ anomalyCheckResult.abnormal_features.length }} chỉ số)
+              </h4>
+              <div style="overflow-x: auto;">
+                <table class="abnormal-features-table">
+                  <thead>
+                    <tr>
+                      <th>Chỉ số</th>
+                      <th>Giá trị hiện tại</th>
+                      <th>P5 (Ngưỡng thấp)</th>
+                      <th>P50 (Trung vị)</th>
+                      <th>P95 (Ngưỡng cao)</th>
+                      <th>Độ lệch (%)</th>
+                      <th>Mức độ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="ab in anomalyCheckResult.abnormal_features"
+                      :key="ab.feature_code"
+                      :class="{ 'severity-high': ab.severity === 'high', 'severity-medium': ab.severity === 'medium' }"
+                    >
+                      <td>
+                        <div style="font-weight: 600;">{{ ab.feature_code }}</div>
+                        <div style="font-size: 0.8rem; color: #666;">{{ ab.feature_name }}</div>
+                      </td>
+                      <td style="font-weight: 600; color: #FF4444;">{{ ab.current_value }}</td>
+                      <td>{{ ab.p5 }}</td>
+                      <td>{{ ab.p50 }}</td>
+                      <td>{{ ab.p95 }}</td>
+                      <td style="font-weight: 600;">
+                        <span v-if="ab.direction === 'low'" style="color: #EF4444;">↓ {{ ab.deviation_percent }}%</span>
+                        <span v-else style="color: #F59E0B;">↑ {{ ab.deviation_percent }}%</span>
+                      </td>
+                      <td>
+                        <span v-if="ab.severity === 'high'" style="color: #EF4444; font-weight: 600;">🔴 Cao</span>
+                        <span v-else style="color: #F59E0B; font-weight: 600;">🔶 Trung bình</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div v-else style="margin: 2rem 0;">
+              <div class="info-note" style="background: #E8F5E9; border-left: 4px solid #10B981;">
+                <span class="note-icon">✅</span>
+                <span class="note-text">
+                  Không phát hiện chỉ số bất thường. Tất cả các chỉ số nằm trong ngưỡng an toàn (P5 - P95).
+                </span>
+              </div>
+            </div>
+
+            <!-- Comparison Radar Chart -->
+            <div style="margin: 2rem 0;">
+              <h4 style="color: #FF4444; font-size: 1.1rem; margin-bottom: 1rem; text-align: center;">
+                📈 So sánh với DN Khỏe mạnh
+              </h4>
+              <div id="comparison-radar-chart" class="comparison-radar-chart" style="width: 100%; height: 500px;"></div>
+            </div>
+
+            <!-- Anomaly Type Badge -->
+            <div style="margin: 2rem 0; text-align: center;">
+              <h4 style="color: #FF4444; font-size: 1.1rem; margin-bottom: 0.5rem;">Loại Bất thường:</h4>
+              <div class="anomaly-type-badge" style="
+                display: inline-block;
+                background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+                color: white;
+                padding: 1rem 2rem;
+                borderRadius: '12px';
+                fontSize: '1.2rem';
+                fontWeight: '600';
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+              ">
+                {{ anomalyCheckResult.anomaly_type }}
+              </div>
+              <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
+                <span v-if="anomalyCheckResult.anomaly_type === 'Normal'">✅ Doanh nghiệp hoạt động bình thường</span>
+                <span v-else-if="anomalyCheckResult.anomaly_type === 'Point Anomaly'">⚠️ Bất thường tại 1 điểm riêng lẻ</span>
+                <span v-else-if="anomalyCheckResult.anomaly_type === 'Contextual Anomaly'">🔶 Bất thường theo ngữ cảnh (2-4 chỉ số)</span>
+                <span v-else-if="anomalyCheckResult.anomaly_type === 'Collective Anomaly'">🔴 Bất thường tập thể (≥5 chỉ số) - Nguy hiểm!</span>
+              </p>
+            </div>
+
+            <!-- Gemini Explanation Box -->
+            <div style="margin: 2rem 0;">
+              <div class="gemini-explanation-box" style="
+                background: linear-gradient(135deg, #FFF5F5 0%, #FFE4E1 100%);
+                border: 3px solid #FFB6C1;
+                borderRadius: '16px';
+                padding: '2rem';
+                boxShadow: '0 4px 12px rgba(255, 182, 193, 0.3)'
+              ">
+                <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                  <span style="font-size: 2rem; margin-right: 0.5rem;">🤖</span>
+                  <h4 style="color: #FF4444; font-size: 1.2rem; margin: 0;">Phân tích từ AI</h4>
+                </div>
+                <div style="line-height: 1.8; color: #333; white-space: pre-wrap;">{{ anomalyCheckResult.gemini_explanation }}</div>
+              </div>
+            </div>
+
+            <!-- Chatbot Button -->
+            <div style="margin-top: 2rem; text-align: center;">
+              <button
+                @click="openAnomalyChatbot"
+                class="btn btn-accent"
+                style="padding: 0.8rem 2rem; font-size: 1rem;"
+              >
+                💬 Hỏi thêm chi tiết về kết quả phân tích
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chatbot Component for Anomaly Detection -->
+        <div v-if="showAnomalyChatbot" class="chatbot-container">
+          <div class="chatbot-header">
+            <div class="chatbot-title">
+              <span class="chatbot-icon">🤖</span>
+              <span>Trợ lý ảo Agribank</span>
+            </div>
+            <button @click="closeAnomalyChatbot" class="chatbot-close">✕</button>
+          </div>
+          <div class="chatbot-messages">
+            <div v-if="anomalyChatMessages.length === 0" class="chatbot-welcome">
+              <p>👋 Xin chào! Tôi là Trợ lý ảo Agribank.</p>
+              <p>Bạn có thể hỏi thêm về kết quả phân tích vừa rồi.</p>
+            </div>
+            <div
+              v-for="(message, index) in anomalyChatMessages"
+              :key="index"
+              class="chat-message"
+              :class="{ 'user-message': message.role === 'user', 'assistant-message': message.role === 'assistant' }"
+            >
+              {{ message.content }}
+            </div>
+            <div v-if="isAnomalyChatLoading" class="chat-loading">
+              <span class="loading-dot"></span>
+              <span class="loading-dot"></span>
+              <span class="loading-dot"></span>
+            </div>
+          </div>
+          <div class="chatbot-input">
+            <input
+              v-model="anomalyChatInput"
+              @keyup.enter="sendAnomalyChatMessage"
+              type="text"
+              placeholder="Nhập câu hỏi của bạn..."
+              class="chat-input-field"
+            />
+            <button @click="sendAnomalyChatMessage" class="chat-send-button" :disabled="!anomalyChatInput.trim() || isAnomalyChatLoading">
+              ➤
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ TAB CONTENT: Survival Analysis -->
+      <div v-if="activeTab === 'survival'" class="tab-content">
+        <div class="card">
+          <h2 class="card-title" style="color: #9C27B0;">⏳ Phân tích Sống sót & Dự báo Thời gian Đến Vỡ nợ</h2>
+
+          <!-- Hướng dẫn sử dụng -->
+          <div class="info-note" style="background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%); border-left: 4px solid #9C27B0;">
+            <span class="note-icon">📖</span>
+            <div class="note-text">
+              <strong>Mục đích:</strong> Phân tích thời gian sống sót của doanh nghiệp và dự báo thời điểm có nguy cơ vỡ nợ cao bằng mô hình Cox Proportional Hazards.<br>
+              <strong>Lưu ý:</strong> Vui lòng huấn luyện mô hình ở Tab "Huấn luyện mô hình" trước khi sử dụng tính năng này.<br>
+              <strong>Cách sử dụng:</strong>
+              <ol style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
+                <li>Bước 1: Upload file XLSX (3 sheets: CDKT, BCTN, LCTT) hoặc nhập thủ công 14 chỉ số tài chính</li>
+                <li>Bước 2: Nhấn "Phân tích Sống sót" để xem biểu đồ sống sót, thời gian trung vị đến vỡ nợ và tỷ lệ rủi ro</li>
+                <li>Bước 3: Xem phân tích AI từ Gemini và xuất báo cáo Word nếu cần</li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- Dự báo Sống sót cho Doanh nghiệp -->
+          <div style="margin: 2rem 0;">
+            <h3 style="color: #9C27B0; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 1.5rem;">🔮</span>
+              Dự báo Sống sót cho Doanh nghiệp
+            </h3>
+          </div>
+
+          <!-- Upload File hoặc Nhập Thủ công -->
+          <div style="margin: 2rem 0;">
+            <h3 style="color: #9C27B0; margin-bottom: 1rem;">📁 Nhập Dữ liệu</h3>
+
+            <!-- Toggle giữa Upload và Nhập thủ công -->
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+              <button
+                @click="survivalInputMode = 'upload'"
+                class="btn"
+                :class="survivalInputMode === 'upload' ? 'btn-primary' : 'btn-secondary'"
+                style="flex: 1;"
+              >
+                📤 Upload File XLSX
+              </button>
+              <button
+                @click="survivalInputMode = 'manual'"
+                class="btn"
+                :class="survivalInputMode === 'manual' ? 'btn-primary' : 'btn-secondary'"
+                style="flex: 1;"
+              >
+                ✍️ Nhập Thủ công 14 Chỉ số
+              </button>
+            </div>
+
+            <!-- Upload Mode -->
+            <div v-if="survivalInputMode === 'upload'" style="margin-top: 1.5rem;">
+              <div class="upload-area" @click="$refs.survivalXlsxInput.click()">
+                <div class="upload-icon">📊</div>
+                <p class="upload-text">{{ survivalXlsxFileName || 'Tải lên file XLSX của doanh nghiệp' }}</p>
+                <p class="upload-hint">
+                  File XLSX phải có 3 sheets: CDKT, BCTN, LCTT
+                </p>
+              </div>
+              <input
+                ref="survivalXlsxInput"
+                type="file"
+                accept=".xlsx,.xls"
+                @change="handleSurvivalXlsxFile"
+                style="display: none"
+              />
+            </div>
+
+            <!-- Manual Input Mode -->
+            <div v-if="survivalInputMode === 'manual'" style="margin-top: 1.5rem;">
+              <div class="indicators-input-grid">
+                <div v-for="(indicator, index) in manualSurvivalIndicators" :key="indicator.code" class="input-group">
+                  <label :for="'survival-' + indicator.code">
+                    {{ indicator.code }}: {{ indicator.name }}
+                  </label>
+                  <input
+                    :id="'survival-' + indicator.code"
+                    v-model.number="indicator.value"
+                    type="number"
+                    step="0.0001"
+                    placeholder="Nhập giá trị"
+                    class="input"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Phân tích Button -->
+            <button
+              @click="analyzeSurvival"
+              class="btn btn-primary"
+              :disabled="isSurvivalAnalyzing || (!survivalXlsxFile && survivalInputMode === 'upload') || (survivalInputMode === 'manual' && !isManualSurvivalValid)"
+              style="margin-top: 1.5rem; width: 100%;"
+            >
+              {{ isSurvivalAnalyzing ? '⏳ Đang phân tích...' : '🔬 Phân tích Sống sót & Dự báo Thời gian Đến Vỡ nợ' }}
+            </button>
+          </div>
+
+          <!-- ✅ Hiển thị bảng 14 chỉ số tài chính (khi showSurvivalIndicators = true) -->
+          <div v-if="showSurvivalIndicators && survivalIndicatorsArray.length > 0" style="margin: 3rem 0;">
+            <h3 style="margin-bottom: 1.5rem; color: #FF6B9D; text-align: center; font-size: 1.6rem;">
+              📈 14 Chỉ số Tài chính đã tính toán
+            </h3>
+            <div class="indicators-tables-container">
+              <!-- Bảng 1: X1-X7 -->
+              <div class="indicators-table-wrapper">
+                <h4 class="table-subtitle">Nhóm 1: Sinh lời & Thanh toán (X1-X7)</h4>
+                <table class="indicators-table">
+                  <thead>
+                    <tr>
+                      <th>Chỉ số</th>
+                      <th>Giá trị</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="indicator in survivalIndicatorsArray.slice(0, 7)" :key="indicator.code">
+                      <td>
+                        <div class="indicator-code-cell">{{ indicator.code }}</div>
+                        <div class="indicator-name-cell">{{ indicator.name }}</div>
+                      </td>
+                      <td class="indicator-value-cell">{{ indicator.value.toFixed(4) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Bảng 2: X8-X14 -->
+              <div class="indicators-table-wrapper">
+                <h4 class="table-subtitle">Nhóm 2: Hiệu quả hoạt động (X8-X14)</h4>
+                <table class="indicators-table">
+                  <thead>
+                    <tr>
+                      <th>Chỉ số</th>
+                      <th>Giá trị</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="indicator in survivalIndicatorsArray.slice(7, 14)" :key="indicator.code">
+                      <td>
+                        <div class="indicator-code-cell">{{ indicator.code }}</div>
+                        <div class="indicator-name-cell">{{ indicator.name }}</div>
+                      </td>
+                      <td class="indicator-value-cell">{{ indicator.value.toFixed(4) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kết quả Survival Analysis -->
+          <div v-if="survivalResult">
+            <!-- Warning nếu có -->
+            <div v-if="survivalResult.warning" class="warning-box" style="
+              background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+              border-left: 5px solid #E53935;
+              padding: 1.5rem;
+              margin: 2rem 0;
+              border-radius: 12px;
+              box-shadow: 0 4px 12px rgba(229, 57, 53, 0.2);
+            ">
+              <h3 style="color: #C62828; margin: 0 0 0.5rem 0; font-size: 1.2rem;">
+                ⚠️ {{ survivalResult.warning.type === 'HIGH_RISK' ? 'CẢNH BÁO RỦI RO CAO' : 'LƯU Ý' }}
+              </h3>
+              <p style="margin: 0.5rem 0; font-size: 1rem; color: #333;">{{ survivalResult.warning.message }}</p>
+              <p style="margin: 0.5rem 0 0 0; font-size: 0.95rem; color: #666; font-style: italic;">
+                <strong>Khuyến nghị:</strong> {{ survivalResult.warning.recommendation }}
+              </p>
+            </div>
+
+            <!-- Metrics Cards -->
+            <div style="margin: 2rem 0;">
+              <h3 style="color: #9C27B0; margin-bottom: 1.5rem; text-align: center;">📊 Các Chỉ số Chính</h3>
+
+              <!-- Dòng 1: Thời gian Trung vị Đến Vỡ nợ (canh giữa, nổi bật) -->
+              <div style="display: flex; justify-content: center; margin-bottom: 2rem;">
+                <div class="metric-card highlight-card" :style="{
+                  background: survivalResult.median_time_to_default < 12
+                    ? 'linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 50%, #C44569 100%)'
+                    : survivalResult.median_time_to_default < 24
+                    ? 'linear-gradient(135deg, #FFA726 0%, #FF9800 50%, #F57C00 100%)'
+                    : 'linear-gradient(135deg, #66BB6A 0%, #4CAF50 50%, #388E3C 100%)',
+                  borderRadius: '20px',
+                  padding: '2.5rem 3rem',
+                  boxShadow: '0 8px 32px rgba(156, 39, 176, 0.3)',
+                  textAlign: 'center',
+                  maxWidth: '500px',
+                  width: '100%',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  border: '3px solid rgba(255, 255, 255, 0.3)'
+                }">
+                  <div style="font-size: 3.5rem; margin-bottom: 0.8rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">⏰</div>
+                  <h4 style="margin: 0 0 1rem 0; color: rgba(255, 255, 255, 0.95); font-size: 1.1rem; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">
+                    Thời gian Trung vị Đến Vỡ nợ
+                  </h4>
+                  <div style="font-size: 4rem; font-weight: 900; margin: 1rem 0; color: #fff; text-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                    {{ survivalResult.median_time_to_default.toFixed(1) }}
+                  </div>
+                  <div style="font-size: 1.5rem; color: rgba(255, 255, 255, 0.9); font-weight: 600; margin-bottom: 0.5rem;">tháng</div>
+                  <div style="margin-top: 1rem; font-size: 1rem; color: rgba(255, 255, 255, 0.85); font-style: italic; font-weight: 500;">
+                    50% xác suất vỡ nợ
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dòng 2: 3 khung ngang - Xác suất 6 tháng, Xác suất 12 tháng, Phân loại Rủi ro -->
+              <div style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 1.5rem;
+              ">
+                <!-- Xác suất Sống sót - 6 tháng -->
+                <div class="metric-card" style="
+                  background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+                  border-radius: 16px;
+                  padding: 1.5rem;
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                  text-align: center;
+                  border: 2px solid #90CAF9;
+                ">
+                  <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📅</div>
+                  <h4 style="margin: 0 0 0.5rem 0; color: #1565C0; font-size: 0.9rem; text-transform: uppercase; font-weight: 700;">
+                    Xác suất Sống sót - 6 tháng
+                  </h4>
+                  <div style="font-size: 2.5rem; font-weight: bold; color: #1565C0; margin: 0.5rem 0;">
+                    {{ (survivalResult.survival_probabilities[6] * 100).toFixed(1) }}%
+                  </div>
+                  <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #666;">
+                    Vỡ nợ: {{ ((1 - survivalResult.survival_probabilities[6]) * 100).toFixed(1) }}%
+                  </div>
+                </div>
+
+                <!-- Xác suất Sống sót - 12 tháng -->
+                <div class="metric-card" style="
+                  background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%);
+                  border-radius: 16px;
+                  padding: 1.5rem;
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                  text-align: center;
+                  border: 2px solid #CE93D8;
+                ">
+                  <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📆</div>
+                  <h4 style="margin: 0 0 0.5rem 0; color: #7B1FA2; font-size: 0.9rem; text-transform: uppercase; font-weight: 700;">
+                    Xác suất Sống sót - 12 tháng
+                  </h4>
+                  <div style="font-size: 2.5rem; font-weight: bold; color: #7B1FA2; margin: 0.5rem 0;">
+                    {{ (survivalResult.survival_probabilities[12] * 100).toFixed(1) }}%
+                  </div>
+                  <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #666;">
+                    Vỡ nợ: {{ ((1 - survivalResult.survival_probabilities[12]) * 100).toFixed(1) }}%
+                  </div>
+                </div>
+
+                <!-- Phân loại Rủi ro -->
+                <div class="metric-card" :style="{
+                  background: survivalResult.risk_classification.color,
+                  borderRadius: '16px',
+                  padding: '1.5rem',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  textAlign: 'center',
+                  border: '2px solid rgba(0,0,0,0.1)'
+                }">
+                  <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">{{ survivalResult.risk_classification.icon }}</div>
+                  <h4 style="margin: 0 0 0.5rem 0; color: #666; font-size: 0.9rem; text-transform: uppercase; font-weight: 700;">
+                    Phân loại Rủi ro
+                  </h4>
+                  <div style="font-size: 1.8rem; font-weight: bold; margin: 0.5rem 0;" :style="{ color: survivalResult.risk_classification.text_color }">
+                    {{ survivalResult.risk_classification.level }}
+                  </div>
+                  <div style="margin-top: 0.5rem; font-size: 0.85rem;" :style="{ color: survivalResult.risk_classification.text_color }">
+                    {{ survivalResult.risk_classification.description }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Survival Curve Chart -->
+            <div style="margin: 3rem 0;">
+              <h3 style="color: #9C27B0; margin-bottom: 1.5rem; text-align: center;">📈 Đường Cong Sống Sót (Survival Curve)</h3>
+              <div ref="survivalChartContainer" style="width: 100%; height: 500px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);"></div>
+
+              <!-- ✅ Bảng ghi chú hướng dẫn xem biểu đồ -->
+              <div style="
+                background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%);
+                border-left: 4px solid #9C27B0;
+                padding: 1.5rem;
+                margin-top: 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(156, 39, 176, 0.15);
+              ">
+                <h4 style="color: #7B1FA2; margin: 0 0 1rem 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                  <span>📖</span>
+                  <span>Hướng dẫn đọc biểu đồ Đường cong Sống sót</span>
+                </h4>
+                <div style="font-size: 0.95rem; color: #333; line-height: 1.8;">
+                  <p style="margin: 0.5rem 0;">
+                    <strong>📊 Trục tung (Y):</strong> Xác suất sống sót - tỷ lệ doanh nghiệp chưa vỡ nợ (0-100%)
+                  </p>
+                  <p style="margin: 0.5rem 0;">
+                    <strong>⏱️ Trục hoành (X):</strong> Thời gian (tháng) - kể từ thời điểm hiện tại
+                  </p>
+                  <p style="margin: 0.5rem 0;">
+                    <strong>📈 Đường cong:</strong> Thể hiện xác suất doanh nghiệp duy trì hoạt động (không vỡ nợ) theo thời gian
+                  </p>
+                  <p style="margin: 0.5rem 0;">
+                    <strong>💡 Cách đọc:</strong>
+                  </p>
+                  <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
+                    <li>Đường cong càng cao → Xác suất sống sót càng tốt (rủi ro thấp)</li>
+                    <li>Đường cong giảm dốc → Nguy cơ vỡ nợ tăng nhanh</li>
+                    <li>Đường cong nằm ngang → Rủi ro ổn định trong giai đoạn đó</li>
+                  </ul>
+                  <p style="margin: 1rem 0 0.5rem 0;">
+                    <strong>🎯 Ví dụ:</strong> Nếu đường cong tại tháng thứ 12 có giá trị 75%, điều này có nghĩa là doanh nghiệp có 75% khả năng không vỡ nợ trong vòng 12 tháng tới (tương đương 25% xác suất vỡ nợ).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hazard Ratios Table -->
+            <div style="margin: 3rem 0;">
+              <h3 style="color: #9C27B0; margin-bottom: 1rem;">🔬 Bảng Hazard Ratios - Top 5 Yếu tố Rủi ro Quan trọng</h3>
+              <div style="background: #F9F9F9; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                  <strong>Giải thích Hazard Ratio (HR):</strong><br>
+                  • <strong>HR > 1:</strong> Chỉ số này làm TĂNG nguy cơ vỡ nợ (càng lớn càng nguy hiểm)<br>
+                  • <strong>HR < 1:</strong> Chỉ số này làm GIẢM nguy cơ vỡ nợ (bảo vệ doanh nghiệp)<br>
+                  • <strong>HR = 1:</strong> Chỉ số không ảnh hưởng đến rủi ro
+                </p>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Thứ hạng</th>
+                      <th>Chỉ số Tài chính</th>
+                      <th>Hazard Ratio</th>
+                      <th>Diễn giải</th>
+                      <th>Ý nghĩa Thống kê</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(hr, index) in survivalResult.hazard_ratios" :key="index">
+                      <td style="text-align: center; font-weight: bold;">{{ index + 1 }}</td>
+                      <td>
+                        <strong>{{ hr.feature_code }}:</strong> {{ hr.feature_name }}
+                      </td>
+                      <td style="text-align: center; font-weight: bold; font-size: 1.1rem;" :style="{
+                        color: hr.hazard_ratio > 1.5 ? '#C62828' : hr.hazard_ratio < 0.7 ? '#2E7D32' : '#F57C00'
+                      }">
+                        {{ hr.hazard_ratio.toFixed(3) }}
+                      </td>
+                      <td :style="{ color: hr.hazard_ratio > 1 ? '#C62828' : '#2E7D32' }">
+                        <span v-if="hr.hazard_ratio > 1">
+                          🔴 Tăng rủi ro {{ ((hr.hazard_ratio - 1) * 100).toFixed(1) }}%
+                        </span>
+                        <span v-else-if="hr.hazard_ratio < 1">
+                          🟢 Giảm rủi ro {{ ((1 - hr.hazard_ratio) * 100).toFixed(1) }}%
+                        </span>
+                        <span v-else>
+                          ⚪ Không ảnh hưởng
+                        </span>
+                      </td>
+                      <td style="text-align: center;">
+                        <span :style="{
+                          padding: '0.3rem 0.8rem',
+                          borderRadius: '20px',
+                          fontSize: '0.85rem',
+                          fontWeight: '600',
+                          background: hr.significance === 'Có ý nghĩa' ? '#C8F5DC' : '#FFE8E8',
+                          color: hr.significance === 'Có ý nghĩa' ? '#0D5B2B' : '#C62828'
+                        }">
+                          {{ hr.significance }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Gemini Analysis Button & Result -->
+            <div style="margin: 3rem 0;">
+              <button
+                @click="getSurvivalGeminiAnalysis"
+                class="btn btn-primary"
+                :disabled="isSurvivalGeminiAnalyzing"
+                style="width: 100%; margin-bottom: 1.5rem;"
+              >
+                {{ isSurvivalGeminiAnalyzing ? '⏳ Đang phân tích bằng AI...' : '🤖 Phân tích Chuyên sâu bằng AI' }}
+              </button>
+
+              <!-- Gemini Analysis Result -->
+              <div v-if="survivalGeminiAnalysis" class="gemini-analysis-box" style="
+                background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%);
+                border: 3px solid #9C27B0;
+                border-radius: 16px;
+                padding: 2rem;
+                box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
+              ">
+                <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                  <span style="font-size: 2rem; margin-right: 0.5rem;">🤖</span>
+                  <h4 style="color: #7B1FA2; font-size: 1.3rem; margin: 0;">Phân tích Chuyên sâu từ AI</h4>
+                </div>
+                <div style="line-height: 1.8; color: #333; white-space: pre-wrap; font-size: 0.95rem;">
+                  {{ survivalGeminiAnalysis }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Export Report Button -->
+            <div style="margin: 2rem 0;">
+              <button
+                @click="exportSurvivalReport"
+                class="btn btn-success"
+                :disabled="isExportingSurvivalReport"
+                style="width: 100%;"
+              >
+                {{ isExportingSurvivalReport ? '⏳ Đang xuất báo cáo...' : '📄 Xuất Báo cáo Word (Survival Analysis)' }}
+              </button>
+            </div>
+
+            <!-- Chatbot Button -->
+            <div style="margin: 2rem 0; text-align: center;">
+              <button
+                @click="openSurvivalChatbot"
+                class="btn btn-info"
+                style="
+                  background: linear-gradient(135deg, #9C27B0 0%, #E1BEE7 100%);
+                  color: white;
+                  font-weight: 700;
+                  padding: 1rem 2rem;
+                  font-size: 1.1rem;
+                "
+              >
+                💬 Hỏi Trợ lý ảo Agribank về Survival Analysis
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Survival Chatbot -->
+        <div v-if="showSurvivalChatbot" class="chatbot-container">
+          <div class="chatbot-header">
+            <h3>💬 Trợ lý ảo Agribank - Survival Analysis</h3>
+            <button @click="closeSurvivalChatbot" class="chatbot-close">&times;</button>
+          </div>
+          <div class="chatbot-messages">
+            <div
+              v-for="(message, index) in survivalChatMessages"
+              :key="index"
+              :class="['chat-message', message.role === 'user' ? 'message-user' : 'message-assistant']"
+            >
+              <div class="message-content">{{ message.content }}</div>
+            </div>
+            <div v-if="isSurvivalChatLoading" class="chat-message message-assistant">
+              <div class="message-content">⏳ Đang suy nghĩ...</div>
+            </div>
+          </div>
+          <div class="chatbot-input">
+            <input
+              v-model="survivalChatInput"
+              @keyup.enter="sendSurvivalChatMessage"
+              type="text"
+              placeholder="Nhập câu hỏi của bạn..."
+              class="chat-input"
+            />
+            <button @click="sendSurvivalChatMessage" class="chat-send-btn" :disabled="!survivalChatInput || isSurvivalChatLoading">
+              Gửi
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ TAB CONTENT: Nhóm Tác giả -->
+      <div v-if="activeTab === 'authors'" class="tab-content">
+        <div class="card authors-card">
+          <h2 class="card-title" style="color: #FF6B9D; text-align: center; font-size: 2rem; margin-bottom: 2rem;">
+            👥 NHÓM ÁNH SÁNG SỐ
+          </h2>
+          <p style="text-align: center; color: #666; font-size: 1.1rem; margin-bottom: 3rem;">
+            Cuộc thi Agribank làm chủ công nghệ trong kỷ nguyên số 2025
+          </p>
+
+          <!-- Hình ảnh nhóm -->
+          <div style="text-align: center; margin-bottom: 3rem;">
+            <img
+              src="/NHOM ANH SANG SO.jpg"
+              alt="Nhóm Ánh Sáng Số"
+              style="max-width: 100%; border-radius: 20px; box-shadow: 0 8px 32px rgba(255, 107, 157, 0.3);"
+            />
+          </div>
+
+          <h3 style="color: #FF6B9D; text-align: center; font-size: 1.5rem; margin-bottom: 2rem;">
+            Thành viên
+          </h3>
+
+          <!-- Container cho các thành viên -->
+          <div class="members-container">
+            <!-- Thành viên 1: Trần Ngọc Trúc Huỳnh -->
+            <div class="member-card member-card-pink">
+              <div class="member-image-wrapper">
+                <img
+                  src="/Tran Ngoc Truc Huynh.jpg"
+                  alt="Trần Ngọc Trúc Huỳnh"
+                  class="member-image"
+                />
+              </div>
+              <div class="member-info">
+                <h4 class="member-name">1. Trần Ngọc Trúc Huỳnh</h4>
+                <p class="member-position"><strong>Chức vụ:</strong> Giao dịch viên</p>
+                <p class="member-unit"><strong>Đơn vị công tác:</strong> Agribank chi nhánh Tiền Giang</p>
+                <p class="member-role-title"><strong>Phụ trách trong nhóm:</strong></p>
+                <ul class="member-roles">
+                  <li>Ý tưởng nâng cấp chương trình "Đánh giá rủi ro tín dụng KHDN version 2.0"</li>
+                  <li>Kỹ thuật chính – Coder chính cho mô hình nâng cấp version 2.0</li>
+                  <li>Trailer giới thiệu mô hình nâng cấp version 2.0</li>
+                  <li>Phân chia, tổ chức công việc cho thành viên nhóm</li>
+                  <li>Hỗ trợ kỹ thuật cho mô hình version 1.0</li>
+                  <li>Kịch bản thuyết trình sân khấu Demo Version 1.0</li>
+                  <li>Thuyết trình trên sân khấu Demo Version 1.0</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Thành viên 2: Nguyễn Hồng Cường -->
+            <div class="member-card member-card-blue">
+              <div class="member-image-wrapper">
+                <img
+                  src="/NGUYEN HONG CUONG.jpg"
+                  alt="Nguyễn Hồng Cường"
+                  class="member-image"
+                />
+              </div>
+              <div class="member-info">
+                <h4 class="member-name">2. Nguyễn Hồng Cường</h4>
+                <p class="member-position"><strong>Chức vụ:</strong> Trưởng phòng Kiểm tra – Kiểm soát Nội bộ</p>
+                <p class="member-unit"><strong>Đơn vị công tác:</strong> Agribank chi nhánh Đông Hải Phòng</p>
+                <p class="member-role-title"><strong>Phụ trách trong nhóm:</strong></p>
+                <ul class="member-roles">
+                  <li>Kỹ thuật chính – Coder chính mô hình version 1.0</li>
+                  <li>Demo trực tiếp mô hình version 1.0 trên sân khấu</li>
+                  <li>Hỗ trợ kỹ thuật cho mô hình nâng cấp version 2.0</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Thành viên 3: Nguyễn Trung Thành -->
+            <div class="member-card member-card-lavender">
+              <div class="member-image-wrapper">
+                <img
+                  src="/NGUYEN TRUNG THANH.jpg"
+                  alt="Nguyễn Trung Thành"
+                  class="member-image"
+                />
+              </div>
+              <div class="member-info">
+                <h4 class="member-name">3. Nguyễn Trung Thành</h4>
+                <p class="member-position"><strong>Chức vụ:</strong> Phó trưởng Phòng Kế toán Ngân quỹ</p>
+                <p class="member-unit"><strong>Đơn vị công tác:</strong> Agribank chi nhánh Hải Dương</p>
+                <p class="member-role-title"><strong>Phụ trách trong nhóm:</strong></p>
+                <ul class="member-roles">
+                  <li>Hỗ trợ kỹ thuật cho mô hình Version 1.0</li>
+                  <li>Thuyết trình sân khấu Demo Version 1.0</li>
+                  <li>Poster mô hình Version 1.0</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { ref, computed, nextTick } from 'vue'
+import axios from 'axios'
+import * as echarts from 'echarts'
+import RiskChart from './components/RiskChart.vue'
+import IndicatorsChart from './components/IndicatorsChart.vue'
+
+export default {
+  name: 'App',
+  components: {
+    RiskChart,
+    IndicatorsChart
+  },
+  setup() {
+    // ✅ TAB STATE - Mặc định là 'predict'
+    const activeTab = ref('predict')
+
+    // Scroll to top button
+    const showScrollTop = ref(false)
+    const scrollTopPosition = ref(100)
+
+    // Chatbot - Tab Dự báo PD
+    const showChatbot = ref(false)
+    const chatMessages = ref([])
+    const chatInput = ref('')
+    const isChatLoading = ref(false)
+
+    // Chatbot - Dashboard Tài chính
+    const showDashboardChatbot = ref(false)
+    const dashboardChatMessages = ref([])
+    const dashboardChatInput = ref('')
+    const isDashboardChatLoading = ref(false)
+
+    // Training
+    const trainFile = ref(null)
+    const trainFileName = ref('')
+    const isTraining = ref(false)
+    const trainResult = ref(null)
+
+    // Training Sub-tabs
+    const trainSubTab = ref('pd') // 'pd', 'early-warning', 'anomaly', 'survival', 'all'
+    const showTrainDropdown = ref(false)
+
+    // Train All Models
+    const allTrainPDFile = ref(null)
+    const allTrainPDFileName = ref('')
+    const allTrainEWFile = ref(null)
+    const allTrainEWFileName = ref('')
+    const allTrainAnomalyFile = ref(null)
+    const allTrainAnomalyFileName = ref('')
+    const allTrainSurvivalFile = ref(null)
+    const allTrainSurvivalFileName = ref('')
+    const isTrainingAll = ref(false)
+    const currentTrainingStep = ref(0)
+    const trainingLogs = ref([])
+    const allTrainingComplete = ref(false)
+
+    // Prediction
+    const xlsxFile = ref(null)
+    const xlsxFileName = ref('')
+    const isPredicting = ref(false)
+    const indicators = ref([])
+    const indicatorsDict = ref(null)
+    const predictionResult = ref(null)
+
+    // Gemini Analysis
+    const isAnalyzing = ref(false)
+    const geminiAnalysis = ref('')
+
+    // Export
+    const isExporting = ref(false)
+
+    // Dashboard Industry Analysis - OLD (giữ lại cho tương thích)
+    const selectedIndustry = ref('')
+    const isAnalyzingIndustry = ref(false)
+    const industryAnalysis = ref('')
+    const industryCharts = ref([])
+
+    // Dashboard Industry Analysis - NEW
+    const isFetchingData = ref(false)
+    const industryData = ref(null)
+    const isShowingCharts = ref(false)
+    const chartsData = ref(null)
+    const briefAnalysis = ref('')
+    const isDeepAnalyzing = ref(false)
+    const deepAnalysisResult = ref('')
+
+    // Dashboard Sub-tab State
+    const dashboardSubTab = ref('industry')
+
+    // PD + Industry Analysis - NEW FEATURE
+    const pdIndustrySelected = ref('')
+    const pdDataSource = ref('')
+    const pdXlsxFile = ref(null)
+    const pdXlsxFileName = ref('')
+    const isAnalyzingPdIndustry = ref(false)
+    const pdAnalysisIndicators = ref(null)
+    const pdAnalysisCharts = ref(null)
+    const pdAnalysisResult = ref('')
+
+    // Scenario Simulation - NEW FEATURE
+    const scenarioDataSource = ref('from_tab')
+    const scenarioFile = ref(null)
+    const scenarioFileName = ref('')
+    const selectedScenario = ref('mild')
+    const customRevenue = ref(-5)
+    const customInterest = ref(10)
+    const customCogs = ref(3)
+    const customLiquidity = ref(-5)
+    const isSimulating = ref(false)
+    const scenarioResult = ref(null)
+    const isAnalyzingScenario = ref(false)
+    const scenarioAnalysis = ref('')
+    const showScenarioChatbot = ref(false)
+    const scenarioChatMessages = ref([])
+    const scenarioChatInput = ref('')
+    const isScenarioChatLoading = ref(false)
+    const isExportingScenario = ref(false)
+
+    // Macro Scenario Simulation - NEW FEATURE
+    const macroDataSource = ref('from_tab')
+    const macroFile = ref(null)
+    const macroFileName = ref('')
+    const selectedMacroScenario = ref('recession_mild')
+    const selectedIndustryCode = ref('manufacturing')
+    const customGdp = ref(-3.5)
+    const customCpi = ref(10.0)
+    const customPpi = ref(14.0)
+    const customPolicyRate = ref(200)
+    const customFx = ref(6.0)
+    const isSimulatingMacro = ref(false)
+    const macroResult = ref(null)
+    const isAnalyzingMacro = ref(false)
+    const macroAnalysis = ref('')
+
+    // Chatbot - Macro Tab
+    const showMacroChatbot = ref(false)
+    const macroChatMessages = ref([])
+    const macroChatInput = ref('')
+    const isMacroChatLoading = ref(false)
+
+    // Early Warning System - NEW FEATURE
+    const ewTrainFile = ref(null)
+    const ewTrainFileName = ref('')
+    const isEWTraining = ref(false)
+    const ewTrainResult = ref(null)
+    const ewCheckMode = ref('upload')
+    const ewCheckFile = ref(null)
+    const ewCheckFileName = ref('')
+    const ewReportPeriod = ref('')
+    const ewIndustryCode = ref('manufacturing')
+    const isEWChecking = ref(false)
+    const ewCheckResult = ref(null)
+    const showEWIndicators = ref(false)
+
+    // Chatbot - Early Warning Tab
+    const showEWChatbot = ref(false)
+    const ewChatMessages = ref([])
+    const ewChatInput = ref('')
+    const isEWChatLoading = ref(false)
+
+    // Chatbot for Anomaly Detection
+    const showAnomalyChatbot = ref(false)
+    const anomalyChatMessages = ref([])
+    const anomalyChatInput = ref('')
+    const isAnomalyChatLoading = ref(false)
+
+    // Anomaly Detection System - NEW FEATURE
+    const anomalyTrainFile = ref(null)
+    const anomalyTrainFileName = ref('')
+    const isAnomalyTraining = ref(false)
+    const anomalyTrainResult = ref(null)
+    const anomalyDataSource = ref('upload_file')
+    const anomalyCheckFile = ref(null)
+    const anomalyCheckFileName = ref('')
+    const isAnomalyChecking = ref(false)
+    const anomalyCheckResult = ref(null)
+    const showAnomalyIndicators = ref(false)
+
+    // Computed: can check anomaly
+    const canCheckAnomaly = computed(() => {
+      if (anomalyDataSource.value === 'from_tab') {
+        return indicatorsDict.value !== null
+      } else {
+        return anomalyCheckFile.value !== null
+      }
+    })
+
+    // Computed: Early Warning Indicators Array (for display table)
+    const ewIndicatorsArray = computed(() => {
+      const indicatorNames = {
+        'X_1': 'Biên lợi nhuận gộp',
+        'X_2': 'Biên lợi nhuận trước thuế',
+        'X_3': 'ROA (Tỷ suất lợi nhuận)',
+        'X_4': 'ROE (Tỷ suất trên vốn)',
+        'X_5': 'Nợ/Tài sản',
+        'X_6': 'Nợ/Vốn CSH',
+        'X_7': 'Thanh toán hiện hành',
+        'X_8': 'Thanh toán nhanh',
+        'X_9': 'Khả năng trả lãi',
+        'X_10': 'Khả năng trả nợ gốc',
+        'X_11': 'Tạo tiền/VCSH',
+        'X_12': 'Vòng quay hàng tồn kho',
+        'X_13': 'Kỳ thu tiền bình quân',
+        'X_14': 'Hiệu suất sử dụng tài sản'
+      }
+
+      let sourceData = null
+
+      // Lấy dữ liệu từ indicatorsDict (nếu dùng dữ liệu từ Tab Dự báo PD)
+      if (ewCheckMode.value === 'from-predict' && indicatorsDict.value) {
+        sourceData = indicatorsDict.value
+      }
+      // Hoặc lấy từ ewCheckResult.indicators (nếu upload file mới)
+      else if (ewCheckResult.value && ewCheckResult.value.indicators) {
+        sourceData = ewCheckResult.value.indicators
+      }
+
+      if (!sourceData) return []
+
+      // Chuyển đổi từ dict sang array và sắp xếp theo thứ tự X_1, X_2, ..., X_14
+      const result = Object.keys(sourceData)
+        .filter(code => code.startsWith('X_'))
+        .map(code => ({
+          code: code,
+          name: indicatorNames[code] || code,
+          value: sourceData[code]
+        }))
+        .sort((a, b) => {
+          const numA = parseInt(a.code.split('_')[1])
+          const numB = parseInt(b.code.split('_')[1])
+          return numA - numB
+        })
+
+      return result
+    })
+
+    // Computed: Anomaly Indicators Array (for display table)
+    const anomalyIndicatorsArray = computed(() => {
+      const indicatorNames = {
+        'X_1': 'Biên lợi nhuận gộp',
+        'X_2': 'Biên lợi nhuận trước thuế',
+        'X_3': 'ROA (Tỷ suất lợi nhuận)',
+        'X_4': 'ROE (Tỷ suất trên vốn)',
+        'X_5': 'Nợ/Tài sản',
+        'X_6': 'Nợ/Vốn CSH',
+        'X_7': 'Thanh toán hiện hành',
+        'X_8': 'Thanh toán nhanh',
+        'X_9': 'Khả năng trả lãi',
+        'X_10': 'Khả năng trả nợ gốc',
+        'X_11': 'Tạo tiền/VCSH',
+        'X_12': 'Vòng quay hàng tồn kho',
+        'X_13': 'Kỳ thu tiền bình quân',
+        'X_14': 'Hiệu suất sử dụng tài sản'
+      }
+
+      let sourceData = null
+
+      // Lấy dữ liệu từ indicatorsDict (nếu dùng dữ liệu từ Tab Dự báo PD)
+      if (anomalyDataSource.value === 'from_tab' && indicatorsDict.value) {
+        sourceData = indicatorsDict.value
+      }
+      // Hoặc lấy từ anomalyCheckResult.indicators (nếu upload file mới)
+      else if (anomalyCheckResult.value && anomalyCheckResult.value.indicators) {
+        sourceData = anomalyCheckResult.value.indicators
+      }
+
+      if (!sourceData) return []
+
+      // Chuyển đổi từ dict sang array và sắp xếp theo thứ tự X_1, X_2, ..., X_14
+      const result = Object.keys(sourceData)
+        .filter(code => code.startsWith('X_'))
+        .map(code => ({
+          code: code,
+          name: indicatorNames[code] || code,
+          value: sourceData[code]
+        }))
+        .sort((a, b) => {
+          const numA = parseInt(a.code.split('_')[1])
+          const numB = parseInt(b.code.split('_')[1])
+          return numA - numB
+        })
+
+      return result
+    })
+
+    // ====================================
+    // SURVIVAL ANALYSIS - NEW FEATURE
+    // ====================================
+    const survivalInputMode = ref('upload')
+    const survivalXlsxFile = ref(null)
+    const survivalXlsxFileName = ref('')
+    const manualSurvivalIndicators = ref([
+      { code: 'X_1', name: 'Biên lợi nhuận gộp', value: null },
+      { code: 'X_2', name: 'Biên lợi nhuận trước thuế', value: null },
+      { code: 'X_3', name: 'ROA', value: null },
+      { code: 'X_4', name: 'ROE', value: null },
+      { code: 'X_5', name: 'Hệ số nợ trên tài sản', value: null },
+      { code: 'X_6', name: 'Hệ số nợ trên VCSH', value: null },
+      { code: 'X_7', name: 'Khả năng thanh toán hiện hành', value: null },
+      { code: 'X_8', name: 'Khả năng thanh toán nhanh', value: null },
+      { code: 'X_9', name: 'Khả năng trả lãi', value: null },
+      { code: 'X_10', name: 'Khả năng trả nợ gốc', value: null },
+      { code: 'X_11', name: 'Khả năng tạo tiền/VCSH', value: null },
+      { code: 'X_12', name: 'Vòng quay hàng tồn kho', value: null },
+      { code: 'X_13', name: 'Kỳ thu tiền bình quân', value: null },
+      { code: 'X_14', name: 'Hiệu suất sử dụng tài sản', value: null }
+    ])
+    const isSurvivalAnalyzing = ref(false)
+    const survivalResult = ref(null)
+    const survivalChartContainer = ref(null)
+    const isSurvivalGeminiAnalyzing = ref(false)
+    const survivalGeminiAnalysis = ref('')
+    const isExportingSurvivalReport = ref(false)
+    const showSurvivalIndicators = ref(false) // ✅ Thêm biến để kiểm soát hiển thị bảng tính
+
+    // Chatbot - Survival Tab
+    const showSurvivalChatbot = ref(false)
+    const survivalChatMessages = ref([])
+    const survivalChatInput = ref('')
+    const isSurvivalChatLoading = ref(false)
+
+    // Training - Survival Tab
+    const survivalTrainFile = ref(null)
+    const survivalTrainFileName = ref('')
+    const isSurvivalTraining = ref(false)
+    const survivalTrainResult = ref(null)
+
+    // Computed: manual survival indicators valid
+    const isManualSurvivalValid = computed(() => {
+      return manualSurvivalIndicators.value.every(ind => ind.value !== null && !isNaN(ind.value))
+    })
+
+    // ✅ Computed: Survival Indicators Array (for display table)
+    const survivalIndicatorsArray = computed(() => {
+      const indicatorNames = {
+        'X_1': 'Biên lợi nhuận gộp',
+        'X_2': 'Biên lợi nhuận trước thuế',
+        'X_3': 'ROA (Tỷ suất lợi nhuận)',
+        'X_4': 'ROE (Tỷ suất trên vốn)',
+        'X_5': 'Nợ/Tài sản',
+        'X_6': 'Nợ/Vốn CSH',
+        'X_7': 'Thanh toán hiện hành',
+        'X_8': 'Thanh toán nhanh',
+        'X_9': 'Khả năng trả lãi',
+        'X_10': 'Khả năng trả nợ gốc',
+        'X_11': 'Tạo tiền/VCSH',
+        'X_12': 'Vòng quay hàng tồn kho',
+        'X_13': 'Kỳ thu tiền bình quân',
+        'X_14': 'Hiệu suất sử dụng tài sản'
+      }
+
+      let sourceData = null
+
+      // Lấy dữ liệu từ survivalResult.indicators (nếu có)
+      if (survivalResult.value && survivalResult.value.indicators) {
+        sourceData = survivalResult.value.indicators
+      }
+      // Hoặc từ manual input mode
+      else if (survivalInputMode.value === 'manual') {
+        const manualData = {}
+        manualSurvivalIndicators.value.forEach(ind => {
+          manualData[ind.code] = ind.value
+        })
+        sourceData = manualData
+      }
+
+      if (!sourceData) return []
+
+      // Chuyển đổi từ dict sang array và sắp xếp theo thứ tự X_1, X_2, ..., X_14
+      const result = Object.keys(sourceData)
+        .filter(code => code.startsWith('X_'))
+        .map(code => ({
+          code: code,
+          name: indicatorNames[code] || code,
+          value: sourceData[code]
+        }))
+        .sort((a, b) => {
+          const numA = parseInt(a.code.split('_')[1])
+          const numB = parseInt(b.code.split('_')[1])
+          return numA - numB
+        })
+
+      return result
+    })
+
+    // API Base URL
+    const API_BASE = 'http://localhost:8000'
+
+    // Methods
+    const handleTrainFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        trainFile.value = file
+        trainFileName.value = file.name
+      }
+    }
+
+    const trainModel = async () => {
+      if (!trainFile.value) return
+
+      isTraining.value = true
+      trainResult.value = null
+
+      try {
+        const formData = new FormData()
+        formData.append('file', trainFile.value)
+
+        const response = await axios.post(`${API_BASE}/train`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+
+        trainResult.value = response.data
+        alert('✅ Huấn luyện mô hình thành công!')
+      } catch (error) {
+        alert('❌ Lỗi khi huấn luyện: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isTraining.value = false
+      }
+    }
+
+    // Train All Models Functions
+    const handleAllTrainPDFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        allTrainPDFile.value = file
+        allTrainPDFileName.value = file.name
+      }
+    }
+
+    const handleAllTrainEWFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        allTrainEWFile.value = file
+        allTrainEWFileName.value = file.name
+      }
+    }
+
+    const handleAllTrainAnomalyFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        allTrainAnomalyFile.value = file
+        allTrainAnomalyFileName.value = file.name
+      }
+    }
+
+    const handleAllTrainSurvivalFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        allTrainSurvivalFile.value = file
+        allTrainSurvivalFileName.value = file.name
+      }
+    }
+
+    const trainAllModels = async () => {
+      // Reset states
+      isTrainingAll.value = true
+      currentTrainingStep.value = 0
+      trainingLogs.value = []
+      allTrainingComplete.value = false
+
+      try {
+        // 1. Train PD Model
+        if (allTrainPDFile.value) {
+          currentTrainingStep.value = 1
+          trainingLogs.value.push('⏳ Bước 1/4: Đang huấn luyện mô hình Dự báo PD...')
+
+          const formData1 = new FormData()
+          formData1.append('file', allTrainPDFile.value)
+          await axios.post(`${API_BASE}/train`, formData1, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+
+          trainingLogs.value.push('✅ Hoàn thành: Mô hình Dự báo PD đã được huấn luyện')
+        }
+
+        // 2. Train Early Warning Model
+        if (allTrainEWFile.value) {
+          currentTrainingStep.value = 2
+          trainingLogs.value.push('⏳ Bước 2/4: Đang huấn luyện mô hình Cảnh báo Rủi ro Sớm...')
+
+          const formData2 = new FormData()
+          formData2.append('file', allTrainEWFile.value)
+          await axios.post(`${API_BASE}/train-early-warning`, formData2, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+
+          trainingLogs.value.push('✅ Hoàn thành: Mô hình Cảnh báo Rủi ro Sớm đã được huấn luyện')
+        }
+
+        // 3. Train Anomaly Detection Model
+        if (allTrainAnomalyFile.value) {
+          currentTrainingStep.value = 3
+          trainingLogs.value.push('⏳ Bước 3/4: Đang huấn luyện mô hình Phát hiện Gian lận...')
+
+          const formData3 = new FormData()
+          formData3.append('file', allTrainAnomalyFile.value)
+          await axios.post(`${API_BASE}/train-anomaly`, formData3, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+
+          trainingLogs.value.push('✅ Hoàn thành: Mô hình Phát hiện Gian lận đã được huấn luyện')
+        }
+
+        // 4. Train Survival Analysis Model
+        if (allTrainSurvivalFile.value) {
+          currentTrainingStep.value = 4
+          trainingLogs.value.push('⏳ Bước 4/4: Đang huấn luyện mô hình Phân tích Sống sót...')
+
+          const formData4 = new FormData()
+          formData4.append('file', allTrainSurvivalFile.value)
+          await axios.post(`${API_BASE}/train-survival`, formData4, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+
+          trainingLogs.value.push('✅ Hoàn thành: Mô hình Phân tích Sống sót đã được huấn luyện')
+        }
+
+        // All done
+        trainingLogs.value.push('🎉 Tất cả các mô hình đã được huấn luyện thành công!')
+        allTrainingComplete.value = true
+
+      } catch (error) {
+        trainingLogs.value.push('❌ Lỗi: ' + (error.response?.data?.detail || error.message))
+        alert('❌ Lỗi khi huấn luyện: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isTrainingAll.value = false
+      }
+    }
+
+    const handleXlsxFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        xlsxFile.value = file
+        xlsxFileName.value = file.name
+      }
+    }
+
+    const predictFromXlsx = async () => {
+      if (!xlsxFile.value) return
+
+      isPredicting.value = true
+      indicators.value = []
+      indicatorsDict.value = null
+      predictionResult.value = null
+      geminiAnalysis.value = ''
+
+      try {
+        const formData = new FormData()
+        formData.append('file', xlsxFile.value)
+
+        const response = await axios.post(`${API_BASE}/predict-from-xlsx`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+
+        if (response.data.status === 'success') {
+          indicators.value = response.data.indicators
+          indicatorsDict.value = response.data.indicators_dict
+          predictionResult.value = response.data.prediction
+
+          alert('✅ Tính toán 14 chỉ số và dự báo PD thành công!')
+        }
+      } catch (error) {
+        alert('❌ Lỗi khi xử lý file XLSX: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isPredicting.value = false
+      }
+    }
+
+    const analyzeWithGemini = async () => {
+      if (!predictionResult.value || !indicatorsDict.value) return
+
+      isAnalyzing.value = true
+      geminiAnalysis.value = ''
+
+      try {
+        const requestData = {
+          prediction: predictionResult.value,
+          indicators_dict: indicatorsDict.value,
+          indicators: indicators.value
+        }
+
+        const response = await axios.post(`${API_BASE}/analyze`, requestData)
+
+        if (response.data.status === 'success') {
+          geminiAnalysis.value = response.data.analysis
+        }
+      } catch (error) {
+        alert('❌ Lỗi khi phân tích bằng Gemini: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isAnalyzing.value = false
+      }
+    }
+
+    const exportReport = async () => {
+      if (!predictionResult.value || !geminiAnalysis.value) return
+
+      isExporting.value = true
+
+      try {
+        const reportData = {
+          prediction: predictionResult.value,
+          indicators: indicators.value,
+          indicators_dict: indicatorsDict.value,
+          analysis: geminiAnalysis.value
+        }
+
+        const response = await axios.post(`${API_BASE}/export-report`, reportData, {
+          responseType: 'blob'
+        })
+
+        // Tạo URL để download
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `bao_cao_tin_dung_${new Date().getTime()}.docx`)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+
+        alert('✅ Xuất báo cáo thành công!')
+      } catch (error) {
+        alert('❌ Lỗi khi xuất báo cáo: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isExporting.value = false
+      }
+    }
+
+    const getRiskClass = (pd) => {
+      const pdPercent = pd * 100
+      if (pdPercent < 2) return 'risk-very-low'
+      if (pdPercent < 5) return 'risk-low'
+      if (pdPercent < 10) return 'risk-medium'
+      if (pdPercent < 20) return 'risk-high'
+      return 'risk-very-high'
+    }
+
+    const getRiskLabel = (pd) => {
+      const pdPercent = pd * 100
+      if (pdPercent < 2) return '🟢 Rất thấp (AAA-AA) - Doanh nghiệp xuất sắc'
+      if (pdPercent < 5) return '🟢 Thấp (A-BBB) - Doanh nghiệp tốt'
+      if (pdPercent < 10) return '🟡 Trung bình (BB) - Cần theo dõi'
+      if (pdPercent < 20) return '🟠 Cao (B) - Rủi ro đáng kể'
+      return '🔴 Rất cao (CCC-D) - Nguy cơ vỡ nợ cao'
+    }
+
+    const getLendingDecisionClass = () => {
+      if (!predictionResult.value) return ''
+      const pdPercent = predictionResult.value.pd_stacking * 100
+      return pdPercent < 10 ? 'decision-approve' : 'decision-reject'
+    }
+
+    const getLendingDecisionIcon = () => {
+      if (!predictionResult.value) return ''
+      const pdPercent = predictionResult.value.pd_stacking * 100
+      return pdPercent < 10 ? '✅' : '❌'
+    }
+
+    const getLendingDecisionText = () => {
+      if (!predictionResult.value) return ''
+      const pdPercent = predictionResult.value.pd_stacking * 100
+      return pdPercent < 10 ? 'CHO VAY' : 'KHÔNG CHO VAY'
+    }
+
+    // Dashboard Industry Analysis
+    const getIndustryName = (industry) => {
+      const names = {
+        'overview': 'Tổng quan Kinh tế Việt Nam',
+        'agriculture': 'Nông nghiệp',
+        'forestry': 'Lâm nghiệp',
+        'fishing': 'Thủy sản',
+        'manufacturing': 'Sản xuất công nghiệp',
+        'processing': 'Chế biến',
+        'construction': 'Xây dựng',
+        'realestate': 'Bất động sản',
+        'retail': 'Bán lẻ',
+        'wholesale': 'Bán sỉ',
+        'trading': 'Thương mại',
+        'finance': 'Tài chính',
+        'banking': 'Ngân hàng',
+        'insurance': 'Bảo hiểm',
+        'technology': 'Công nghệ Thông tin',
+        'software': 'Phần mềm',
+        'transportation': 'Vận tải',
+        'logistics': 'Logistics',
+        'tourism': 'Du lịch',
+        'hospitality': 'Khách sạn - Nhà hàng',
+        'services': 'Dịch vụ',
+        'healthcare': 'Y tế',
+        'pharmaceutical': 'Dược phẩm',
+        'energy': 'Năng lượng',
+        'electricity': 'Điện lực',
+        'mining': 'Khai khoáng',
+        'education': 'Giáo dục',
+        'media': 'Truyền thông',
+        'textile': 'Dệt may',
+        'food': 'Thực phẩm & Đồ uống'
+      }
+      return names[industry] || industry
+    }
+
+    const analyzeIndustry = async () => {
+      if (!selectedIndustry.value) return
+
+      isAnalyzingIndustry.value = true
+      industryAnalysis.value = ''
+      industryCharts.value = []
+
+      try {
+        const requestData = {
+          industry: selectedIndustry.value,
+          industry_name: getIndustryName(selectedIndustry.value)
+        }
+
+        const response = await axios.post(`${API_BASE}/analyze-industry`, requestData)
+
+        if (response.data.status === 'success') {
+          industryAnalysis.value = response.data.analysis
+          industryCharts.value = response.data.charts || []
+
+          // Scroll to results
+          setTimeout(() => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+          }, 100)
+        }
+      } catch (error) {
+        alert('❌ Lỗi khi phân tích ngành: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isAnalyzingIndustry.value = false
+      }
+    }
+
+    // NEW Dashboard Methods
+    const fetchIndustryData = async () => {
+      if (!selectedIndustry.value) return
+
+      isFetchingData.value = true
+      industryData.value = null
+      chartsData.value = null
+      briefAnalysis.value = ''
+      deepAnalysisResult.value = ''
+
+      try {
+        const requestData = {
+          industry: selectedIndustry.value,
+          industry_name: getIndustryName(selectedIndustry.value)
+        }
+
+        const response = await axios.post(`${API_BASE}/fetch-industry-data`, requestData)
+
+        if (response.data.status === 'success') {
+          industryData.value = response.data.data
+          alert('✅ Đã lấy dữ liệu thành công! Nhấn "Xem biểu đồ" để tiếp tục.')
+        }
+      } catch (error) {
+        alert('❌ Lỗi khi lấy dữ liệu: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isFetchingData.value = false
+      }
+    }
+
+    const showCharts = async () => {
+      if (!industryData.value) return
+
+      isShowingCharts.value = true
+      chartsData.value = null
+      briefAnalysis.value = ''
+
+      try {
+        const requestData = {
+          industry: selectedIndustry.value,
+          industry_name: getIndustryName(selectedIndustry.value),
+          data: industryData.value
+        }
+
+        const response = await axios.post(`${API_BASE}/generate-charts`, requestData)
+
+        if (response.data.status === 'success') {
+          chartsData.value = response.data.charts_data
+          briefAnalysis.value = response.data.brief_analysis
+
+          // Render charts using ECharts
+          await nextTick()
+          renderCharts(response.data.charts_data)
+        }
+      } catch (error) {
+        alert('❌ Lỗi khi tạo biểu đồ: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isShowingCharts.value = false
+      }
+    }
+
+    const renderCharts = (chartsDataArray) => {
+      const container = document.getElementById('industry-charts-container')
+      if (!container) return
+
+      // Clear container
+      container.innerHTML = ''
+
+      // Tạo nhiều biểu đồ ECharts
+      chartsDataArray.forEach((chartConfig, index) => {
+        const chartDiv = document.createElement('div')
+        chartDiv.id = `chart-${index}`
+        chartDiv.style.width = '100%'
+        chartDiv.style.height = '400px'
+        chartDiv.style.marginBottom = '2rem'
+        container.appendChild(chartDiv)
+
+        const chartInstance = echarts.init(chartDiv)
+        chartInstance.setOption(chartConfig)
+      })
+    }
+
+    const deepAnalyze = async () => {
+      if (!chartsData.value) return
+
+      isDeepAnalyzing.value = true
+      deepAnalysisResult.value = ''
+
+      try {
+        const requestData = {
+          industry: selectedIndustry.value,
+          industry_name: getIndustryName(selectedIndustry.value),
+          data: industryData.value,
+          brief_analysis: briefAnalysis.value
+        }
+
+        const response = await axios.post(`${API_BASE}/deep-analyze-industry`, requestData)
+
+        if (response.data.status === 'success') {
+          deepAnalysisResult.value = response.data.deep_analysis
+        }
+      } catch (error) {
+        alert('❌ Lỗi khi phân tích sâu: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isDeepAnalyzing.value = false
+      }
+    }
+
+    // NEW: Handle PD XLSX file upload
+    const handlePdXlsxFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        pdXlsxFile.value = file
+        pdXlsxFileName.value = file.name
+      }
+    }
+
+    // NEW: Analyze PD with Industry
+    const analyzePdWithIndustry = async () => {
+      if (!pdIndustrySelected.value || !pdDataSource.value) return
+
+      isAnalyzingPdIndustry.value = true
+      pdAnalysisIndicators.value = null
+      pdAnalysisCharts.value = null
+      pdAnalysisResult.value = ''
+
+      try {
+        let indicatorsToUse = null
+
+        // Option 1: Lấy từ Tab Dự báo
+        if (pdDataSource.value === 'from-predict') {
+          if (!indicatorsDict.value) {
+            alert('⚠️ Vui lòng tải file và tính toán chỉ số ở Tab "Dự Báo PD" trước')
+            return
+          }
+          indicatorsToUse = indicatorsDict.value
+        }
+        // Option 2: Tải file mới
+        else if (pdDataSource.value === 'new-file') {
+          if (!pdXlsxFile.value) {
+            alert('⚠️ Vui lòng tải lên file XLSX')
+            return
+          }
+
+          // Tính toán 14 chỉ số từ file mới
+          const formData = new FormData()
+          formData.append('file', pdXlsxFile.value)
+
+          const calcResponse = await axios.post(`${API_BASE}/predict-from-xlsx`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          })
+
+          if (calcResponse.data.status === 'success') {
+            indicatorsToUse = calcResponse.data.indicators_dict
+          } else {
+            alert('❌ Lỗi khi tính toán chỉ số từ file XLSX')
+            return
+          }
+        }
+
+        // Gọi API phân tích PD kết hợp ngành
+        const requestData = {
+          indicators_dict: indicatorsToUse,
+          industry: pdIndustrySelected.value,
+          industry_name: getIndustryName(pdIndustrySelected.value)
+        }
+
+        const response = await axios.post(`${API_BASE}/analyze-pd-with-industry`, requestData)
+
+        if (response.data.status === 'success') {
+          pdAnalysisIndicators.value = indicatorsToUse
+          pdAnalysisResult.value = response.data.analysis
+          pdAnalysisCharts.value = response.data.charts_data
+
+          // Render charts
+          await nextTick()
+          renderPdIndustryCharts(response.data.charts_data)
+
+          alert('✅ Phân tích PD kết hợp ngành nghề thành công!')
+        }
+      } catch (error) {
+        alert('❌ Lỗi khi phân tích: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isAnalyzingPdIndustry.value = false
+      }
+    }
+
+    // NEW: Render PD Industry Charts
+    const renderPdIndustryCharts = (chartsDataArray) => {
+      const container = document.getElementById('pd-industry-charts-container')
+      if (!container) return
+
+      // Clear container
+      container.innerHTML = ''
+
+      // Tạo nhiều biểu đồ ECharts
+      chartsDataArray.forEach((chartConfig, index) => {
+        const chartDiv = document.createElement('div')
+        chartDiv.id = `pd-chart-${index}`
+        chartDiv.style.width = '100%'
+        chartDiv.style.height = '400px'
+        chartDiv.style.marginBottom = '2rem'
+        container.appendChild(chartDiv)
+
+        const chartInstance = echarts.init(chartDiv)
+        chartInstance.setOption(chartConfig)
+      })
+    }
+
+    // Scroll to top functionality
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+      showScrollTop.value = scrollTop > 300
+
+      // Cập nhật vị trí nút theo chuột
+      scrollTopPosition.value = Math.min(100 + scrollTop * 0.05, window.innerHeight - 100)
+    }
+
+    const scrollToTop = () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      })
+    }
+
+    // Navigate to PD Industry Tab
+    const goToPdIndustryTab = () => {
+      activeTab.value = 'dashboard'
+      dashboardSubTab.value = 'pd-industry'
+
+      // Scroll to top
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }, 100)
+    }
+
+    // Chatbot functionality - Tab Dự báo PD
+    const openChatbot = () => {
+      showChatbot.value = true
+    }
+
+    const closeChatbot = () => {
+      showChatbot.value = false
+    }
+
+    const sendChatMessage = async () => {
+      if (!chatInput.value.trim() || isChatLoading.value) return
+
+      const userMessage = chatInput.value
+      chatMessages.value.push({
+        role: 'user',
+        content: userMessage
+      })
+      chatInput.value = ''
+      isChatLoading.value = true
+
+      try {
+        const requestData = {
+          question: userMessage,
+          context: geminiAnalysis.value,
+          indicators: indicatorsDict.value,
+          prediction: predictionResult.value
+        }
+
+        const response = await axios.post(`${API_BASE}/chat-assistant`, requestData)
+
+        if (response.data.status === 'success') {
+          chatMessages.value.push({
+            role: 'assistant',
+            content: response.data.answer
+          })
+        }
+      } catch (error) {
+        chatMessages.value.push({
+          role: 'assistant',
+          content: '❌ Xin lỗi, đã có lỗi xảy ra khi xử lý câu hỏi của bạn.'
+        })
+      } finally {
+        isChatLoading.value = false
+      }
+    }
+
+    // Chatbot functionality - Dashboard Tài chính
+    const openDashboardChatbot = () => {
+      showDashboardChatbot.value = true
+    }
+
+    const closeDashboardChatbot = () => {
+      showDashboardChatbot.value = false
+    }
+
+    const sendDashboardChatMessage = async () => {
+      if (!dashboardChatInput.value.trim() || isDashboardChatLoading.value) return
+
+      const userMessage = dashboardChatInput.value
+      dashboardChatMessages.value.push({
+        role: 'user',
+        content: userMessage
+      })
+      dashboardChatInput.value = ''
+      isDashboardChatLoading.value = true
+
+      try {
+        // Xác định context dựa trên sub-tab hiện tại
+        let context = ''
+        let indicators = {}
+        let prediction = {}
+
+        if (dashboardSubTab.value === 'industry') {
+          // Sub-tab Phân tích Ngành
+          context = deepAnalysisResult.value || briefAnalysis.value || 'Chưa có phân tích ngành'
+          indicators = { industry: selectedIndustry.value, industry_name: getIndustryName(selectedIndustry.value) }
+        } else if (dashboardSubTab.value === 'pd-industry') {
+          // Sub-tab PD chuyên sâu
+          context = pdAnalysisResult.value || 'Chưa có phân tích PD kết hợp ngành'
+          indicators = pdAnalysisIndicators.value || {}
+          prediction = { industry: pdIndustrySelected.value, industry_name: getIndustryName(pdIndustrySelected.value) }
+        }
+
+        const requestData = {
+          question: userMessage,
+          context: context,
+          indicators: indicators,
+          prediction: prediction
+        }
+
+        const response = await axios.post(`${API_BASE}/chat-assistant`, requestData)
+
+        if (response.data.status === 'success') {
+          dashboardChatMessages.value.push({
+            role: 'assistant',
+            content: response.data.answer
+          })
+        }
+      } catch (error) {
+        dashboardChatMessages.value.push({
+          role: 'assistant',
+          content: '❌ Xin lỗi, đã có lỗi xảy ra khi xử lý câu hỏi của bạn.'
+        })
+      } finally {
+        isDashboardChatLoading.value = false
+      }
+    }
+
+    // Chatbot functionality - Early Warning Tab
+    const openEWChatbot = () => {
+      showEWChatbot.value = true
+    }
+
+    const closeEWChatbot = () => {
+      showEWChatbot.value = false
+    }
+
+    const sendEWChatMessage = async () => {
+      if (!ewChatInput.value.trim() || isEWChatLoading.value) return
+
+      const userMessage = ewChatInput.value
+      ewChatMessages.value.push({
+        role: 'user',
+        content: userMessage
+      })
+      ewChatInput.value = ''
+      isEWChatLoading.value = true
+
+      try {
+        const requestData = {
+          question: userMessage,
+          context: ewCheckResult.value?.gemini_diagnosis || 'Chưa có kết quả chẩn đoán',
+          indicators: indicatorsDict.value || {},
+          prediction: {
+            health_score: ewCheckResult.value?.health_score,
+            risk_level: ewCheckResult.value?.risk_level_text,
+            current_pd: ewCheckResult.value?.current_pd
+          }
+        }
+
+        const response = await axios.post(`${API_BASE}/chat-assistant`, requestData)
+
+        if (response.data.status === 'success') {
+          ewChatMessages.value.push({
+            role: 'assistant',
+            content: response.data.answer
+          })
+        }
+      } catch (error) {
+        ewChatMessages.value.push({
+          role: 'assistant',
+          content: '❌ Xin lỗi, đã có lỗi xảy ra khi xử lý câu hỏi của bạn.'
+        })
+      } finally {
+        isEWChatLoading.value = false
+      }
+    }
+
+    // Chatbot functionality - Anomaly Detection Tab
+    const openAnomalyChatbot = () => {
+      showAnomalyChatbot.value = true
+    }
+
+    const closeAnomalyChatbot = () => {
+      showAnomalyChatbot.value = false
+    }
+
+    const sendAnomalyChatMessage = async () => {
+      if (!anomalyChatInput.value.trim() || isAnomalyChatLoading.value) return
+
+      const userMessage = anomalyChatInput.value
+      anomalyChatMessages.value.push({
+        role: 'user',
+        content: userMessage
+      })
+      anomalyChatInput.value = ''
+      isAnomalyChatLoading.value = true
+
+      try {
+        const requestData = {
+          question: userMessage,
+          context: anomalyCheckResult.value?.gemini_explanation || 'Chưa có kết quả phân tích',
+          indicators: indicatorsDict.value || {},
+          prediction: {
+            anomaly_score: anomalyCheckResult.value?.anomaly_score,
+            risk_level: anomalyCheckResult.value?.risk_level,
+            anomaly_type: anomalyCheckResult.value?.anomaly_type
+          }
+        }
+
+        const response = await axios.post(`${API_BASE}/chat-assistant`, requestData)
+
+        if (response.data.status === 'success') {
+          anomalyChatMessages.value.push({
+            role: 'assistant',
+            content: response.data.answer
+          })
+        }
+      } catch (error) {
+        anomalyChatMessages.value.push({
+          role: 'assistant',
+          content: '❌ Xin lỗi, đã có lỗi xảy ra khi xử lý câu hỏi của bạn.'
+        })
+      } finally {
+        isAnomalyChatLoading.value = false
+      }
+    }
+
+    // ========================================================================================
+    // ANOMALY DETECTION SYSTEM - METHODS
+    // ========================================================================================
+
+    const handleAnomalyTrainFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        anomalyTrainFile.value = file
+        anomalyTrainFileName.value = file.name
+      }
+    }
+
+    const trainAnomalyModel = async () => {
+      if (!anomalyTrainFile.value) return
+
+      isAnomalyTraining.value = true
+      anomalyTrainResult.value = null
+
+      try {
+        const formData = new FormData()
+        formData.append('file', anomalyTrainFile.value)
+
+        const response = await axios.post(`${API_BASE}/train-anomaly`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+
+        if (response.data.status === 'success') {
+          anomalyTrainResult.value = response.data
+          alert('✅ Train Anomaly Detection Model thành công!')
+        }
+      } catch (error) {
+        console.error('Lỗi khi train anomaly model:', error)
+        alert('❌ Lỗi khi train model: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isAnomalyTraining.value = false
+      }
+    }
+
+    const handleAnomalyCheckFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        anomalyCheckFile.value = file
+        anomalyCheckFileName.value = file.name
+      }
+    }
+
+    const checkAnomaly = async () => {
+      if (!canCheckAnomaly.value) return
+
+      isAnomalyChecking.value = true
+      anomalyCheckResult.value = null
+      showAnomalyIndicators.value = false
+
+      try {
+        const formData = new FormData()
+
+        if (anomalyDataSource.value === 'upload_file') {
+          // Upload file mới
+          formData.append('file', anomalyCheckFile.value)
+        } else {
+          // Dùng dữ liệu từ Tab Dự báo PD
+          formData.append('indicators_json', JSON.stringify(indicatorsDict.value))
+        }
+
+        const response = await axios.post(`${API_BASE}/check-anomaly`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+
+        if (response.data.status === 'success') {
+          anomalyCheckResult.value = response.data
+          showAnomalyIndicators.value = true
+
+          // Đợi DOM cập nhật rồi render charts
+          await nextTick()
+          renderAnomalyScoreGauge()
+          renderComparisonRadarChart()
+        }
+      } catch (error) {
+        console.error('Lỗi khi kiểm tra bất thường:', error)
+        alert('❌ Lỗi khi kiểm tra bất thường: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isAnomalyChecking.value = false
+      }
+    }
+
+    const renderAnomalyScoreGauge = () => {
+      if (!anomalyCheckResult.value) return
+
+      const chartDom = document.getElementById('anomaly-score-gauge')
+      if (!chartDom) return
+
+      const myChart = echarts.init(chartDom)
+      const score = anomalyCheckResult.value.anomaly_score
+
+      const option = {
+        series: [
+          {
+            type: 'gauge',
+            startAngle: 180,
+            endAngle: 0,
+            min: 0,
+            max: 100,
+            splitNumber: 10,
+            axisLine: {
+              lineStyle: {
+                width: 20,
+                color: [
+                  [0.6, '#10B981'],
+                  [0.8, '#F59E0B'],
+                  [1, '#EF4444']
+                ]
+              }
+            },
+            pointer: {
+              icon: 'path://M2090.36389,615.30999 L2090.36389,615.30999 C2091.48372,615.30999 2092.40383,616.194028 2092.44859,617.312956 L2096.90698,728.755929 C2097.05155,732.369577 2094.2393,735.416212 2090.62566,735.56078 C2090.53845,735.564269 2090.45117,735.566014 2090.36389,735.566014 L2090.36389,735.566014 C2086.74736,735.566014 2083.81557,732.63423 2083.81557,729.017692 C2083.81557,728.930412 2083.81732,728.84314 2083.82081,728.755929 L2088.2792,617.312956 C2088.32396,616.194028 2089.24407,615.30999 2090.36389,615.30999 Z',
+              length: '75%',
+              width: 16,
+              offsetCenter: [0, '5%']
+            },
+            axisTick: {
+              length: 12,
+              lineStyle: {
+                color: 'auto',
+                width: 2
+              }
+            },
+            splitLine: {
+              length: 20,
+              lineStyle: {
+                color: 'auto',
+                width: 3
+              }
+            },
+            axisLabel: {
+              color: '#464646',
+              fontSize: 14,
+              distance: -50,
+              formatter: function (value) {
+                return value.toFixed(0)
+              }
+            },
+            title: {
+              offsetCenter: [0, '30%'],
+              fontSize: 16,
+              color: '#FF4444'
+            },
+            detail: {
+              fontSize: 32,
+              offsetCenter: [0, '60%'],
+              valueAnimation: true,
+              formatter: function (value) {
+                return value.toFixed(1)
+              },
+              color: 'auto'
+            },
+            data: [
+              {
+                value: score,
+                name: 'Anomaly Score'
+              }
+            ]
+          }
+        ]
+      }
+
+      myChart.setOption(option)
+    }
+
+    const renderComparisonRadarChart = () => {
+      if (!anomalyCheckResult.value) return
+
+      const chartDom = document.getElementById('comparison-radar-chart')
+      if (!chartDom) return
+
+      const myChart = echarts.init(chartDom)
+
+      const comparison = anomalyCheckResult.value.comparison_with_healthy
+
+      // Tạo indicator data
+      const indicators = comparison.map(item => ({
+        name: item.feature,
+        max: Math.max(Math.abs(item.current), Math.abs(item.healthy_mean)) * 1.5 || 1
+      }))
+
+      // Tạo data series
+      const currentValues = comparison.map(item => item.current)
+      const healthyValues = comparison.map(item => item.healthy_mean)
+
+      const option = {
+        title: {
+          text: ''
+        },
+        legend: {
+          data: ['DN hiện tại', 'DN khỏe mạnh (Mean)'],
+          top: 20
+        },
+        radar: {
+          indicator: indicators,
+          shape: 'polygon',
+          splitNumber: 4
+        },
+        series: [
+          {
+            name: 'So sánh DN',
+            type: 'radar',
+            data: [
+              {
+                value: currentValues,
+                name: 'DN hiện tại',
+                areaStyle: {
+                  color: 'rgba(255, 68, 68, 0.3)'
+                },
+                lineStyle: {
+                  color: '#FF4444',
+                  width: 2
+                },
+                itemStyle: {
+                  color: '#FF4444'
+                }
+              },
+              {
+                value: healthyValues,
+                name: 'DN khỏe mạnh (Mean)',
+                areaStyle: {
+                  color: 'rgba(16, 185, 129, 0.3)'
+                },
+                lineStyle: {
+                  color: '#10B981',
+                  width: 2
+                },
+                itemStyle: {
+                  color: '#10B981'
+                }
+              }
+            ]
+          }
+        ]
+      }
+
+      myChart.setOption(option)
+    }
+
+    // Chatbot functionality - Macro Tab
+    const openMacroChatbot = () => {
+      showMacroChatbot.value = true
+    }
+
+    const closeMacroChatbot = () => {
+      showMacroChatbot.value = false
+    }
+
+    const sendMacroChatMessage = async () => {
+      if (!macroChatInput.value.trim() || isMacroChatLoading.value) return
+
+      const userMessage = macroChatInput.value
+      macroChatMessages.value.push({
+        role: 'user',
+        content: userMessage
+      })
+      macroChatInput.value = ''
+      isMacroChatLoading.value = true
+
+      try {
+        const requestData = {
+          question: userMessage,
+          context: macroAnalysis.value || 'Chưa có phân tích vĩ mô',
+          indicators: macroResult.value?.indicators_after || {},
+          prediction: macroResult.value?.prediction_after || {}
+        }
+
+        const response = await axios.post(`${API_BASE}/chat-assistant`, requestData)
+
+        if (response.data.status === 'success') {
+          macroChatMessages.value.push({
+            role: 'assistant',
+            content: response.data.answer
+          })
+        }
+      } catch (error) {
+        macroChatMessages.value.push({
+          role: 'assistant',
+          content: '❌ Xin lỗi, đã có lỗi xảy ra khi xử lý câu hỏi của bạn.'
+        })
+      } finally {
+        isMacroChatLoading.value = false
+      }
+    }
+
+    // Gemini Analysis for Macro Tab
+    const analyzeMacro = async () => {
+      if (!macroResult.value) return
+
+      isAnalyzingMacro.value = true
+      macroAnalysis.value = ''
+
+      try {
+        const requestData = {
+          indicators_before: macroResult.value.indicators_before,
+          indicators_after: macroResult.value.indicators_after,
+          prediction_before: macroResult.value.prediction_before,
+          prediction_after: macroResult.value.prediction_after,
+          scenario_info: macroResult.value.scenario_info,
+          pd_change: macroResult.value.pd_change
+        }
+
+        const response = await axios.post(`${API_BASE}/analyze-macro`, requestData)
+
+        if (response.data.status === 'success') {
+          macroAnalysis.value = response.data.analysis
+        }
+      } catch (error) {
+        alert('❌ Lỗi khi phân tích: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isAnalyzingMacro.value = false
+      }
+    }
+
+    // ================================================================================================
+    // SCENARIO SIMULATION METHODS
+    // ================================================================================================
+
+    const handleScenarioFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        scenarioFile.value = file
+        scenarioFileName.value = file.name
+      }
+    }
+
+    const canRunSimulation = computed(() => {
+      if (scenarioDataSource.value === 'from_tab') {
+        return indicatorsDict.value !== null
+      } else {
+        return scenarioFile.value !== null
+      }
+    })
+
+    const runScenarioSimulation = async () => {
+      if (!canRunSimulation.value) return
+
+      isSimulating.value = true
+      scenarioResult.value = null
+      scenarioAnalysis.value = ''
+      showScenarioChatbot.value = false
+      scenarioChatMessages.value = []
+
+      try {
+        const formData = new FormData()
+
+        // Thêm dữ liệu tùy theo nguồn
+        if (scenarioDataSource.value === 'new_file') {
+          formData.append('file', scenarioFile.value)
+        } else {
+          // Sử dụng dữ liệu từ Tab Dự báo PD
+          formData.append('indicators_json', JSON.stringify(indicatorsDict.value))
+        }
+
+        // Thêm thông tin kịch bản
+        formData.append('scenario_type', selectedScenario.value)
+
+        if (selectedScenario.value === 'custom') {
+          formData.append('custom_revenue', customRevenue.value.toString())
+          formData.append('custom_interest', customInterest.value.toString())
+          formData.append('custom_cogs', customCogs.value.toString())
+          formData.append('custom_liquidity', customLiquidity.value.toString())
+        }
+
+        const response = await axios.post(`${API_BASE}/simulate-scenario`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+
+        scenarioResult.value = response.data
+        console.log('✅ Mô phỏng kịch bản thành công:', response.data)
+      } catch (error) {
+        console.error('❌ Lỗi khi mô phỏng kịch bản:', error)
+        alert(error.response?.data?.detail || 'Lỗi khi mô phỏng kịch bản. Vui lòng thử lại.')
+      } finally {
+        isSimulating.value = false
+      }
+    }
+
+    const analyzeScenario = async () => {
+      if (!scenarioResult.value) return
+
+      isAnalyzingScenario.value = true
+
+      try {
+        const response = await axios.post(`${API_BASE}/analyze-scenario`, scenarioResult.value)
+        scenarioAnalysis.value = response.data.analysis
+        console.log('✅ Phân tích kịch bản thành công')
+      } catch (error) {
+        console.error('❌ Lỗi khi phân tích kịch bản:', error)
+        alert('Lỗi khi phân tích. Vui lòng kiểm tra GEMINI_API_KEY và thử lại.')
+      } finally {
+        isAnalyzingScenario.value = false
+      }
+    }
+
+    // Scenario Chatbot functionality
+    const openScenarioChatbot = () => {
+      showScenarioChatbot.value = true
+    }
+
+    const closeScenarioChatbot = () => {
+      showScenarioChatbot.value = false
+    }
+
+    const sendScenarioChatMessage = async () => {
+      if (!scenarioChatInput.value.trim() || isScenarioChatLoading.value) return
+
+      const userMessage = scenarioChatInput.value.trim()
+      scenarioChatMessages.value.push({
+        role: 'user',
+        content: userMessage
+      })
+      scenarioChatInput.value = ''
+      isScenarioChatLoading.value = true
+
+      try {
+        const response = await axios.post(`${API_BASE}/chat-assistant`, {
+          question: userMessage,
+          context: scenarioAnalysis.value,
+          indicators: scenarioResult.value.indicators_after_dict,
+          prediction: scenarioResult.value.prediction_after
+        })
+
+        if (response.data.status === 'success') {
+          scenarioChatMessages.value.push({
+            role: 'assistant',
+            content: response.data.answer
+          })
+        }
+      } catch (error) {
+        scenarioChatMessages.value.push({
+          role: 'assistant',
+          content: '❌ Xin lỗi, đã có lỗi xảy ra khi xử lý câu hỏi của bạn.'
+        })
+      } finally {
+        isScenarioChatLoading.value = false
+      }
+    }
+
+    const exportScenarioReport = async () => {
+      if (!scenarioResult.value || !scenarioAnalysis.value) return
+
+      isExportingScenario.value = true
+
+      try {
+        // Tạo dữ liệu báo cáo
+        const reportData = {
+          prediction: scenarioResult.value.prediction_after,
+          indicators: scenarioResult.value.indicators_after,
+          indicators_dict: scenarioResult.value.indicators_after_dict,
+          analysis: scenarioAnalysis.value,
+          scenario_info: scenarioResult.value.scenario_info,
+          comparison: {
+            before: scenarioResult.value.prediction_before,
+            after: scenarioResult.value.prediction_after,
+            pd_change: scenarioResult.value.pd_change
+          }
+        }
+
+        const response = await axios.post(`${API_BASE}/export-report`, reportData, {
+          responseType: 'blob'
+        })
+
+        // Tạo link download
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        })
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `bao_cao_mo_phong_${Date.now()}.docx`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+
+        console.log('✅ Xuất báo cáo thành công')
+      } catch (error) {
+        console.error('❌ Lỗi khi xuất báo cáo:', error)
+        alert('Lỗi khi xuất báo cáo. Vui lòng thử lại.')
+      } finally {
+        isExportingScenario.value = false
+      }
+    }
+
+    // ================================================================================
+    // MACRO SCENARIO METHODS
+    // ================================================================================
+    const handleMacroFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        macroFile.value = file
+        macroFileName.value = file.name
+      }
+    }
+
+    const canRunMacroSimulation = computed(() => {
+      if (macroDataSource.value === 'from_tab') {
+        return !!indicatorsDict.value
+      } else if (macroDataSource.value === 'new_file') {
+        return !!macroFile.value
+      }
+      return false
+    })
+
+    const runMacroSimulation = async () => {
+      if (!canRunMacroSimulation.value) return
+
+      isSimulatingMacro.value = true
+      macroResult.value = null
+
+      try {
+        const formData = new FormData()
+
+        // Thêm nguồn dữ liệu
+        if (macroDataSource.value === 'from_tab') {
+          formData.append('indicators_json', JSON.stringify(indicatorsDict.value))
+        } else if (macroDataSource.value === 'new_file') {
+          formData.append('file', macroFile.value)
+        }
+
+        // Thêm kịch bản vĩ mô
+        formData.append('scenario_type', selectedMacroScenario.value)
+        formData.append('industry_code', selectedIndustryCode.value)
+
+        // Nếu là custom, thêm các giá trị tùy chỉnh
+        if (selectedMacroScenario.value === 'custom') {
+          formData.append('custom_gdp', customGdp.value)
+          formData.append('custom_cpi', customCpi.value)
+          formData.append('custom_ppi', customPpi.value)
+          formData.append('custom_policy_rate', customPolicyRate.value)
+          formData.append('custom_fx', customFx.value)
+        } else {
+          formData.append('custom_gdp', 0)
+          formData.append('custom_cpi', 0)
+          formData.append('custom_ppi', 0)
+          formData.append('custom_policy_rate', 0)
+          formData.append('custom_fx', 0)
+        }
+
+        const response = await axios.post(`${API_BASE}/simulate-scenario-macro`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+
+        if (response.data.status === 'success') {
+          macroResult.value = response.data
+          console.log('✅ Mô phỏng vĩ mô thành công:', macroResult.value)
+          alert('✅ Mô phỏng kịch bản vĩ mô thành công!')
+        }
+      } catch (error) {
+        console.error('❌ Lỗi khi mô phỏng vĩ mô:', error)
+        alert('❌ Lỗi khi mô phỏng: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isSimulatingMacro.value = false
+      }
+    }
+
+    const getPdChangeClass = (changePct) => {
+      const absChange = Math.abs(changePct)
+      if (absChange < 10) return 'pd-change-low'
+      if (absChange < 30) return 'pd-change-moderate'
+      if (absChange < 50) return 'pd-change-high'
+      return 'pd-change-critical'
+    }
+
+    const getChangeClass = (after, before) => {
+      if (before === 0) return ''
+      const change = ((after - before) / before) * 100
+      if (Math.abs(change) < 1) return 'change-neutral'
+      return change > 0 ? 'change-up' : 'change-down'
+    }
+
+    const getChangeText = (after, before) => {
+      if (before === 0) return 'N/A'
+      const change = ((after - before) / before) * 100
+      const arrow = change > 0 ? '↑' : change < 0 ? '↓' : '→'
+      return `${arrow}${Math.abs(change).toFixed(1)}%`
+    }
+
+    // ====================================================================================================
+    // EARLY WARNING SYSTEM METHODS
+    // ====================================================================================================
+
+    const handleEWTrainFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        ewTrainFile.value = file
+        ewTrainFileName.value = file.name
+      }
+    }
+
+    const trainEarlyWarningModel = async () => {
+      if (!ewTrainFile.value) return
+
+      isEWTraining.value = true
+      ewTrainResult.value = null
+
+      try {
+        const formData = new FormData()
+        formData.append('file', ewTrainFile.value)
+
+        const response = await axios.post(`${API_BASE}/train-early-warning`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+
+        if (response.data.status === 'success') {
+          ewTrainResult.value = response.data
+          alert('✅ Early Warning System trained successfully!')
+        }
+      } catch (error) {
+        alert('❌ Lỗi khi train model: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isEWTraining.value = false
+      }
+    }
+
+    const handleEWCheckFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        ewCheckFile.value = file
+        ewCheckFileName.value = file.name
+      }
+    }
+
+    const checkEarlyWarning = async () => {
+      if (ewCheckMode.value === 'upload' && !ewCheckFile.value) {
+        alert('⚠️ Vui lòng upload file DN cần kiểm tra!')
+        return
+      }
+
+      if (ewCheckMode.value === 'from-predict' && !indicatorsDict.value) {
+        alert('⚠️ Chưa có dữ liệu từ Tab Dự báo PD. Vui lòng chạy dự báo PD trước!')
+        return
+      }
+
+      isEWChecking.value = true
+      ewCheckResult.value = null
+
+      try {
+        const formData = new FormData()
+
+        if (ewCheckMode.value === 'upload') {
+          formData.append('file', ewCheckFile.value)
+        } else {
+          formData.append('indicators_json', JSON.stringify(indicatorsDict.value))
+        }
+
+        if (ewReportPeriod.value) {
+          formData.append('report_period', ewReportPeriod.value)
+        }
+
+        formData.append('industry_code', ewIndustryCode.value)
+
+        const response = await axios.post(`${API_BASE}/early-warning-check`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+
+        if (response.data.status === 'success') {
+          ewCheckResult.value = response.data
+
+          // Tự động hiển thị bảng 14 chỉ số tài chính
+          showEWIndicators.value = true
+
+          // Vẽ các biểu đồ sau khi có kết quả
+          await nextTick()
+          renderEWCharts()
+
+          alert('✅ Chẩn đoán rủi ro thành công!')
+        }
+      } catch (error) {
+        alert('❌ Lỗi khi kiểm tra cảnh báo: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        isEWChecking.value = false
+      }
+    }
+
+    const renderEWCharts = () => {
+      if (!ewCheckResult.value) return
+
+      // 1. Health Score Gauge
+      renderHealthScoreGauge()
+
+      // 2. Cluster Radar Chart
+      renderClusterRadarChart()
+
+      // 3. PD Projection Chart
+      renderPDProjectionChart()
+    }
+
+    const renderHealthScoreGauge = () => {
+      const chartDom = document.getElementById('health-score-gauge')
+      if (!chartDom) return
+
+      const myChart = echarts.init(chartDom)
+
+      const healthScore = ewCheckResult.value.health_score
+      const riskLevelColor = ewCheckResult.value.risk_level_color
+
+      const option = {
+        series: [
+          {
+            type: 'gauge',
+            startAngle: 180,
+            endAngle: 0,
+            min: 0,
+            max: 100,
+            splitNumber: 10,
+            itemStyle: {
+              color: riskLevelColor
+            },
+            progress: {
+              show: true,
+              width: 30
+            },
+            pointer: {
+              show: true,
+              length: '60%',
+              width: 8
+            },
+            axisLine: {
+              lineStyle: {
+                width: 30,
+                color: [
+                  [0.4, '#EF4444'],
+                  [0.6, '#FF8C00'],
+                  [0.8, '#F59E0B'],
+                  [1, '#10B981']
+                ]
+              }
+            },
+            axisTick: {
+              show: true
+            },
+            splitLine: {
+              length: 15,
+              lineStyle: {
+                width: 2,
+                color: '#999'
+              }
+            },
+            axisLabel: {
+              distance: 25,
+              color: '#999',
+              fontSize: 12
+            },
+            detail: {
+              valueAnimation: true,
+              formatter: '{value}',
+              fontSize: 40,
+              fontWeight: 'bold',
+              color: riskLevelColor,
+              offsetCenter: [0, '70%']
+            },
+            data: [
+              {
+                value: healthScore,
+                name: 'Health Score'
+              }
+            ]
+          }
+        ]
+      }
+
+      myChart.setOption(option)
+    }
+
+    const renderClusterRadarChart = () => {
+      const chartDom = document.getElementById('cluster-radar-chart')
+      if (!chartDom) return
+
+      const myChart = echarts.init(chartDom)
+
+      const clusterInfo = ewCheckResult.value.cluster_info
+      const clusterMedian = clusterInfo.cluster_median_indicators
+
+      // Lấy 14 chỉ số hiện tại (từ indicatorsDict hoặc từ checkResult)
+      let currentIndicators = {}
+      if (ewCheckMode.value === 'from-predict' && indicatorsDict.value) {
+        currentIndicators = indicatorsDict.value
+      } else if (ewCheckResult.value.indicators) {
+        // Nếu upload file, lấy từ backend (đã được tính và trả về)
+        currentIndicators = ewCheckResult.value.indicators
+      } else {
+        // Fallback: sử dụng cluster median nếu không có dữ liệu
+        currentIndicators = clusterMedian
+      }
+
+      const indicatorNames = [
+        'X_1: Biên LN gộp',
+        'X_2: Biên LNTT',
+        'X_3: ROA',
+        'X_4: ROE',
+        'X_5: Nợ/TS',
+        'X_6: Nợ/VCSH',
+        'X_7: TT hiện hành',
+        'X_8: TT nhanh',
+        'X_9: Trả lãi',
+        'X_10: Trả nợ gốc',
+        'X_11: Tạo tiền',
+        'X_12: Vòng quay HTK',
+        'X_13: Kỳ thu tiền',
+        'X_14: Hiệu suất TS'
+      ]
+
+      // Tính max cho mỗi indicator (để normalize)
+      const maxValues = {}
+      for (let i = 1; i <= 14; i++) {
+        const key = `X_${i}`
+        const currentVal = currentIndicators[key] || 0
+        const medianVal = clusterMedian[key] || 0
+        maxValues[key] = Math.max(Math.abs(currentVal), Math.abs(medianVal), 1) * 1.5
+      }
+
+      const radarIndicators = indicatorNames.map((name, index) => {
+        const key = `X_${index + 1}`
+        return {
+          name: name,
+          max: maxValues[key]
+        }
+      })
+
+      const currentValues = []
+      const medianValues = []
+
+      for (let i = 1; i <= 14; i++) {
+        const key = `X_${i}`
+        currentValues.push(Math.abs(currentIndicators[key] || 0))
+        medianValues.push(Math.abs(clusterMedian[key] || 0))
+      }
+
+      const option = {
+        title: {
+          text: 'So sánh với Median của Cluster',
+          left: 'center',
+          textStyle: {
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: '#FF6B9D'
+          }
+        },
+        tooltip: {
+          trigger: 'item'
+        },
+        legend: {
+          bottom: 10,
+          data: ['Doanh nghiệp của bạn', 'Median của Cluster']
+        },
+        radar: {
+          indicator: radarIndicators,
+          splitNumber: 4,
+          shape: 'circle',
+          splitArea: {
+            areaStyle: {
+              color: ['rgba(255, 107, 157, 0.1)', 'rgba(255, 107, 157, 0.05)']
+            }
+          },
+          axisLine: {
+            lineStyle: {
+              color: 'rgba(255, 107, 157, 0.3)'
+            }
+          },
+          splitLine: {
+            lineStyle: {
+              color: 'rgba(255, 107, 157, 0.3)'
+            }
+          }
+        },
+        series: [
+          {
+            name: 'Chỉ số tài chính',
+            type: 'radar',
+            data: [
+              {
+                value: currentValues,
+                name: 'Doanh nghiệp của bạn',
+                areaStyle: {
+                  color: 'rgba(255, 107, 157, 0.3)'
+                },
+                lineStyle: {
+                  color: '#FF6B9D',
+                  width: 2
+                },
+                itemStyle: {
+                  color: '#FF6B9D'
+                }
+              },
+              {
+                value: medianValues,
+                name: 'Median của Cluster',
+                areaStyle: {
+                  color: 'rgba(59, 130, 246, 0.2)'
+                },
+                lineStyle: {
+                  color: '#3B82F6',
+                  width: 2
+                },
+                itemStyle: {
+                  color: '#3B82F6'
+                }
+              }
+            ]
+          }
+        ]
+      }
+
+      myChart.setOption(option)
+    }
+
+    const renderPDProjectionChart = () => {
+      const chartDom = document.getElementById('pd-projection-chart')
+      if (!chartDom) return
+
+      const myChart = echarts.init(chartDom)
+
+      const pdProjection = ewCheckResult.value.pd_projection
+
+      const xAxisData = ['Hiện tại', '3 tháng', '6 tháng', '12 tháng']
+
+      const mildData = [
+        pdProjection.current,
+        pdProjection.recession_mild['3_months'],
+        pdProjection.recession_mild['6_months'],
+        pdProjection.recession_mild['12_months']
+      ]
+
+      const moderateData = [
+        pdProjection.current,
+        pdProjection.recession_moderate['3_months'],
+        pdProjection.recession_moderate['6_months'],
+        pdProjection.recession_moderate['12_months']
+      ]
+
+      const crisisData = [
+        pdProjection.current,
+        pdProjection.crisis['3_months'],
+        pdProjection.crisis['6_months'],
+        pdProjection.crisis['12_months']
+      ]
+
+      const option = {
+        title: {
+          text: 'Dự báo PD theo các kịch bản vĩ mô',
+          left: 'center',
+          textStyle: {
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: '#FF6B9D'
+          }
+        },
+        tooltip: {
+          trigger: 'axis',
+          formatter: (params) => {
+            let result = `<div style="font-weight: bold; margin-bottom: 5px;">${params[0].name}</div>`
+            params.forEach(param => {
+              result += `<div>${param.marker}${param.seriesName}: ${param.value.toFixed(2)}%</div>`
+            })
+            return result
+          }
+        },
+        legend: {
+          bottom: 10,
+          data: ['🟠 Suy thoái nhẹ', '🔴 Suy thoái trung bình', '⚫ Khủng hoảng']
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '15%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: xAxisData
+        },
+        yAxis: {
+          type: 'value',
+          name: 'PD (%)',
+          axisLabel: {
+            formatter: '{value}%'
+          }
+        },
+        series: [
+          {
+            name: '🟠 Suy thoái nhẹ',
+            type: 'line',
+            data: mildData,
+            smooth: true,
+            lineStyle: {
+              color: '#F59E0B',
+              width: 3
+            },
+            itemStyle: {
+              color: '#F59E0B'
+            },
+            areaStyle: {
+              color: 'rgba(245, 158, 11, 0.1)'
+            }
+          },
+          {
+            name: '🔴 Suy thoái trung bình',
+            type: 'line',
+            data: moderateData,
+            smooth: true,
+            lineStyle: {
+              color: '#FF8C00',
+              width: 3
+            },
+            itemStyle: {
+              color: '#FF8C00'
+            },
+            areaStyle: {
+              color: 'rgba(255, 140, 0, 0.1)'
+            }
+          },
+          {
+            name: '⚫ Khủng hoảng',
+            type: 'line',
+            data: crisisData,
+            smooth: true,
+            lineStyle: {
+              color: '#EF4444',
+              width: 3
+            },
+            itemStyle: {
+              color: '#EF4444'
+            },
+            areaStyle: {
+              color: 'rgba(239, 68, 68, 0.1)'
+            }
+          }
+        ]
+      }
+
+      myChart.setOption(option)
+    }
+
+    const getTopFeatureImportances = () => {
+      if (!ewTrainResult.value || !ewTrainResult.value.feature_importances) return {}
+
+      const importances = ewTrainResult.value.feature_importances
+      const sorted = Object.entries(importances)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+
+      return Object.fromEntries(sorted)
+    }
+
+    const getSeverityLabel = (severity) => {
+      const labels = {
+        'critical': '🔴 Nghiêm trọng',
+        'moderate': '🟡 Trung bình',
+        'low': '🟢 Nhẹ'
+      }
+      return labels[severity] || severity
+    }
+
+    // ====================================
+    // SURVIVAL ANALYSIS METHODS
+    // ====================================
+
+    const handleSurvivalXlsxFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        survivalXlsxFile.value = file
+        survivalXlsxFileName.value = file.name
+      }
+    }
+
+    // ====================================
+    // SURVIVAL TRAINING FUNCTIONS
+    // ====================================
+    const handleSurvivalTrainFile = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        survivalTrainFile.value = file
+        survivalTrainFileName.value = file.name
+      }
+    }
+
+    const trainSurvivalModel = async () => {
+      if (!survivalTrainFile.value) {
+        alert('⚠️ Vui lòng upload file training data trước!')
+        return
+      }
+
+      isSurvivalTraining.value = true
+      survivalTrainResult.value = null
+
+      try {
+
+        const formData = new FormData()
+        formData.append('file', survivalTrainFile.value)
+
+        const response = await axios.post(`${API_BASE}/train-survival`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          timeout: 600000  // 10 phút (600000ms) - 2 models chạy tuần tự nên cần thời gian dài hơn
+        })
+
+        if (response.data.status === 'success') {
+          survivalTrainResult.value = response.data
+          alert('✅ Huấn luyện mô hình thành công!\n\n' +
+                `Cox C-index: ${response.data.cox_model.c_index.toFixed(4)}\n` +
+                `RSF C-index: ${response.data.rsf_model.c_index.toFixed(4)}`)
+        } else {
+          throw new Error(response.data.detail || 'Lỗi không xác định')
+        }
+      } catch (error) {
+        console.error('Lỗi khi huấn luyện survival model:', error)
+        alert(`❌ Lỗi khi huấn luyện: ${error.response?.data?.detail || error.message}`)
+      } finally {
+        isSurvivalTraining.value = false
+      }
+    }
+
+    // ====================================
+    // SURVIVAL PREDICTION FUNCTIONS
+    // ====================================
+    const analyzeSurvival = async () => {
+      try {
+        isSurvivalAnalyzing.value = true
+        survivalResult.value = null
+        survivalGeminiAnalysis.value = ''
+
+        const formData = new FormData()
+
+        if (survivalInputMode.value === 'upload') {
+          // Upload mode
+          formData.append('file', survivalXlsxFile.value)
+        } else {
+          // Manual mode - convert indicators to JSON
+          const indicatorsObj = {}
+          manualSurvivalIndicators.value.forEach(ind => {
+            indicatorsObj[ind.code] = ind.value
+          })
+          formData.append('indicators_json', JSON.stringify(indicatorsObj))
+        }
+
+        const response = await axios.post(`${API_BASE}/predict-survival`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+
+        if (response.data.status === 'success') {
+          survivalResult.value = response.data
+
+          // ✅ Tự động hiển thị bảng 14 chỉ số tài chính
+          showSurvivalIndicators.value = true
+
+          // Render survival curve chart
+          await nextTick()
+          renderSurvivalChart()
+
+          alert('✅ Phân tích Sống sót hoàn tất!')
+        } else {
+          throw new Error(response.data.detail || 'Lỗi không xác định')
+        }
+      } catch (error) {
+        console.error('Lỗi khi phân tích survival:', error)
+        alert(`❌ Lỗi: ${error.response?.data?.detail || error.message}`)
+      } finally {
+        isSurvivalAnalyzing.value = false
+      }
+    }
+
+    const renderSurvivalChart = () => {
+      if (!survivalResult.value || !survivalChartContainer.value) return
+
+      const survivalCurve = survivalResult.value.survival_curve
+      const timeline = survivalCurve.timeline
+      const probabilities = survivalCurve.survival_probabilities
+
+      const myChart = echarts.init(survivalChartContainer.value)
+
+      const option = {
+        title: {
+          text: 'Đường Cong Sống Sót (Survival Curve)',
+          left: 'center',
+          textStyle: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: '#9C27B0'
+          }
+        },
+        tooltip: {
+          trigger: 'axis',
+          formatter: (params) => {
+            const time = params[0].axisValue
+            const survivalProb = params[0].data
+            const defaultProb = 1 - survivalProb
+            return `<div style="font-weight: bold; margin-bottom: 5px;">Tháng ${time}</div>
+                    <div>Xác suất sống sót: ${(survivalProb * 100).toFixed(2)}%</div>
+                    <div>Xác suất vỡ nợ: ${(defaultProb * 100).toFixed(2)}%</div>`
+          }
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          name: 'Thời gian (tháng)',
+          boundaryGap: false,
+          data: timeline,
+          nameTextStyle: {
+            fontSize: 14,
+            fontWeight: 'bold'
+          }
+        },
+        yAxis: {
+          type: 'value',
+          name: 'Xác suất Sống sót',
+          min: 0,
+          max: 1,
+          axisLabel: {
+            formatter: (value) => (value * 100).toFixed(0) + '%'
+          },
+          nameTextStyle: {
+            fontSize: 14,
+            fontWeight: 'bold'
+          }
+        },
+        series: [
+          {
+            name: 'Survival Probability',
+            type: 'line',
+            data: probabilities,
+            smooth: false,
+            lineStyle: {
+              color: '#9C27B0',
+              width: 3
+            },
+            itemStyle: {
+              color: '#9C27B0'
+            },
+            areaStyle: {
+              color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [
+                  { offset: 0, color: 'rgba(156, 39, 176, 0.3)' },
+                  { offset: 1, color: 'rgba(156, 39, 176, 0.05)' }
+                ]
+              }
+            },
+            markLine: {
+              data: [
+                {
+                  yAxis: 0.5,
+                  name: 'Median (50%)',
+                  label: {
+                    formatter: 'Median: 50%',
+                    position: 'insideEndTop'
+                  },
+                  lineStyle: {
+                    color: '#E91E63',
+                    type: 'dashed',
+                    width: 2
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+
+      myChart.setOption(option)
+    }
+
+    const getSurvivalGeminiAnalysis = async () => {
+      if (!survivalResult.value) {
+        alert('⚠️ Vui lòng phân tích survival trước!')
+        return
+      }
+
+      try {
+        isSurvivalGeminiAnalyzing.value = true
+
+        const response = await axios.post(`${API_BASE}/analyze-survival-gemini`, {
+          data: survivalResult.value
+        })
+
+        if (response.data.analysis) {
+          survivalGeminiAnalysis.value = response.data.analysis
+        } else {
+          throw new Error('Không nhận được phân tích từ Gemini')
+        }
+      } catch (error) {
+        console.error('Lỗi khi phân tích Gemini:', error)
+        alert(`❌ Lỗi: ${error.response?.data?.detail || error.message}`)
+      } finally {
+        isSurvivalGeminiAnalyzing.value = false
+      }
+    }
+
+    const exportSurvivalReport = async () => {
+      if (!survivalResult.value) {
+        alert('⚠️ Vui lòng phân tích survival trước!')
+        return
+      }
+
+      try {
+        isExportingSurvivalReport.value = true
+
+        const exportData = {
+          ...survivalResult.value,
+          gemini_analysis: survivalGeminiAnalysis.value
+        }
+
+        const response = await axios.post(`${API_BASE}/export-survival-report`, exportData, {
+          responseType: 'blob'
+        })
+
+        // Tạo link download
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `Bao_cao_Survival_Analysis_${new Date().getTime()}.docx`)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+
+        alert('✅ Đã xuất báo cáo Word thành công!')
+      } catch (error) {
+        console.error('Lỗi khi xuất báo cáo:', error)
+        alert(`❌ Lỗi: ${error.response?.data?.detail || error.message}`)
+      } finally {
+        isExportingSurvivalReport.value = false
+      }
+    }
+
+    const openSurvivalChatbot = () => {
+      if (!survivalResult.value) {
+        alert('⚠️ Vui lòng phân tích survival trước!')
+        return
+      }
+      showSurvivalChatbot.value = true
+    }
+
+    const closeSurvivalChatbot = () => {
+      showSurvivalChatbot.value = false
+    }
+
+    const sendSurvivalChatMessage = async () => {
+      if (!survivalChatInput.value.trim()) return
+
+      // Add user message
+      survivalChatMessages.value.push({
+        role: 'user',
+        content: survivalChatInput.value
+      })
+
+      const userQuestion = survivalChatInput.value
+      survivalChatInput.value = ''
+      isSurvivalChatLoading.value = true
+
+      try {
+        const response = await axios.post(`${API_BASE}/chat-assistant`, {
+          question: userQuestion,
+          context: survivalGeminiAnalysis.value || 'Phân tích Sống sót',
+          indicators: survivalResult.value.indicators,
+          prediction: {
+            median_time: survivalResult.value.median_time_to_default,
+            survival_probabilities: survivalResult.value.survival_probabilities,
+            risk_level: survivalResult.value.risk_classification.level
+          }
+        })
+
+        survivalChatMessages.value.push({
+          role: 'assistant',
+          content: response.data.answer
+        })
+      } catch (error) {
+        console.error('Lỗi chatbot:', error)
+        survivalChatMessages.value.push({
+          role: 'assistant',
+          content: '❌ Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.'
+        })
+      } finally {
+        isSurvivalChatLoading.value = false
+      }
+    }
+
+    const renderMarkdown = (text) => {
+      if (!text) return ''
+
+      // Simple markdown rendering
+      let html = text
+        .replace(/^### (.+)$/gm, '<h4 style="color: #FF6B9D; margin-top: 1.5rem; margin-bottom: 0.5rem;">$1</h4>')
+        .replace(/^## (.+)$/gm, '<h3 style="color: #FF1493; margin-top: 2rem; margin-bottom: 1rem; font-weight: 900;">$1</h3>')
+        .replace(/^\*\*(.+)\*\*$/gm, '<div style="font-weight: 700; margin-top: 1rem;">$1</div>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/^- (.+)$/gm, '<li>$1</li>')
+
+      html = '<p>' + html + '</p>'
+      html = html.replace(/<\/li>\n<li>/g, '</li><li>').replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+
+      return html
+    }
+
+    // Mounted - Add scroll listener
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', handleScroll)
+    }
+
+    return {
+      // ✅ TAB STATE
+      activeTab,
+      // Scroll to top
+      showScrollTop,
+      scrollTopPosition,
+      scrollToTop,
+      // Chatbot - Tab Dự báo PD
+      showChatbot,
+      chatMessages,
+      chatInput,
+      isChatLoading,
+      openChatbot,
+      closeChatbot,
+      sendChatMessage,
+      // Chatbot - Dashboard
+      showDashboardChatbot,
+      dashboardChatMessages,
+      dashboardChatInput,
+      isDashboardChatLoading,
+      openDashboardChatbot,
+      closeDashboardChatbot,
+      sendDashboardChatMessage,
+      // Training
+      trainFile,
+      trainFileName,
+      isTraining,
+      trainResult,
+      trainSubTab,
+      showTrainDropdown,
+      // Train All Models
+      allTrainPDFile,
+      allTrainPDFileName,
+      allTrainEWFile,
+      allTrainEWFileName,
+      allTrainAnomalyFile,
+      allTrainAnomalyFileName,
+      allTrainSurvivalFile,
+      allTrainSurvivalFileName,
+      isTrainingAll,
+      currentTrainingStep,
+      trainingLogs,
+      allTrainingComplete,
+      canTrainAll: computed(() => {
+        return allTrainPDFile.value || allTrainEWFile.value || allTrainAnomalyFile.value || allTrainSurvivalFile.value
+      }),
+      handleAllTrainPDFile,
+      handleAllTrainEWFile,
+      handleAllTrainAnomalyFile,
+      handleAllTrainSurvivalFile,
+      trainAllModels,
+      // Prediction
+      xlsxFile,
+      xlsxFileName,
+      isPredicting,
+      indicators,
+      indicatorsDict,
+      predictionResult,
+      // Gemini Analysis
+      isAnalyzing,
+      geminiAnalysis,
+      // Export
+      isExporting,
+      // Dashboard - OLD
+      selectedIndustry,
+      isAnalyzingIndustry,
+      industryAnalysis,
+      industryCharts,
+      // Dashboard - NEW
+      isFetchingData,
+      industryData,
+      isShowingCharts,
+      chartsData,
+      briefAnalysis,
+      isDeepAnalyzing,
+      deepAnalysisResult,
+      // Dashboard Sub-tab
+      dashboardSubTab,
+      // PD + Industry - NEW
+      pdIndustrySelected,
+      pdDataSource,
+      pdXlsxFile,
+      pdXlsxFileName,
+      isAnalyzingPdIndustry,
+      pdAnalysisIndicators,
+      pdAnalysisCharts,
+      pdAnalysisResult,
+      // Methods
+      handleTrainFile,
+      trainModel,
+      handleXlsxFile,
+      predictFromXlsx,
+      analyzeWithGemini,
+      exportReport,
+      getRiskClass,
+      getRiskLabel,
+      getLendingDecisionClass,
+      getLendingDecisionIcon,
+      getLendingDecisionText,
+      getIndustryName,
+      analyzeIndustry,
+      // Dashboard - NEW Methods
+      fetchIndustryData,
+      showCharts,
+      deepAnalyze,
+      // PD + Industry - NEW Methods
+      handlePdXlsxFile,
+      analyzePdWithIndustry,
+      // Navigate
+      goToPdIndustryTab,
+      // Scenario Simulation - NEW FEATURE
+      scenarioDataSource,
+      scenarioFile,
+      scenarioFileName,
+      selectedScenario,
+      customRevenue,
+      customInterest,
+      customCogs,
+      customLiquidity,
+      isSimulating,
+      scenarioResult,
+      isAnalyzingScenario,
+      scenarioAnalysis,
+      showScenarioChatbot,
+      scenarioChatMessages,
+      scenarioChatInput,
+      isScenarioChatLoading,
+      isExportingScenario,
+      handleScenarioFile,
+      canRunSimulation,
+      runScenarioSimulation,
+      analyzeScenario,
+      openScenarioChatbot,
+      closeScenarioChatbot,
+      sendScenarioChatMessage,
+      exportScenarioReport,
+      getPdChangeClass,
+      getChangeClass,
+      getChangeText,
+      // Macro Scenario Simulation - NEW FEATURE
+      macroDataSource,
+      macroFile,
+      macroFileName,
+      selectedMacroScenario,
+      selectedIndustryCode,
+      customGdp,
+      customCpi,
+      customPpi,
+      customPolicyRate,
+      customFx,
+      isSimulatingMacro,
+      macroResult,
+      isAnalyzingMacro,
+      macroAnalysis,
+      handleMacroFile,
+      canRunMacroSimulation,
+      runMacroSimulation,
+      analyzeMacro,
+      // Chatbot - Macro
+      showMacroChatbot,
+      macroChatMessages,
+      macroChatInput,
+      isMacroChatLoading,
+      openMacroChatbot,
+      closeMacroChatbot,
+      sendMacroChatMessage,
+      // Early Warning System - NEW FEATURE
+      ewTrainFile,
+      ewTrainFileName,
+      isEWTraining,
+      ewTrainResult,
+      ewCheckMode,
+      ewCheckFile,
+      ewCheckFileName,
+      ewReportPeriod,
+      ewIndustryCode,
+      isEWChecking,
+      ewCheckResult,
+      showEWIndicators,
+      ewIndicatorsArray,
+      handleEWTrainFile,
+      trainEarlyWarningModel,
+      handleEWCheckFile,
+      checkEarlyWarning,
+      renderEWCharts,
+      getTopFeatureImportances,
+      getSeverityLabel,
+      renderMarkdown,
+      // Chatbot - Early Warning
+      showEWChatbot,
+      ewChatMessages,
+      ewChatInput,
+      isEWChatLoading,
+      openEWChatbot,
+      closeEWChatbot,
+      sendEWChatMessage,
+      // Chatbot - Anomaly Detection
+      showAnomalyChatbot,
+      anomalyChatMessages,
+      anomalyChatInput,
+      isAnomalyChatLoading,
+      openAnomalyChatbot,
+      closeAnomalyChatbot,
+      sendAnomalyChatMessage,
+      // Anomaly Detection System - NEW FEATURE
+      anomalyTrainFile,
+      anomalyTrainFileName,
+      isAnomalyTraining,
+      anomalyTrainResult,
+      anomalyDataSource,
+      anomalyCheckFile,
+      anomalyCheckFileName,
+      isAnomalyChecking,
+      anomalyCheckResult,
+      showAnomalyIndicators,
+      anomalyIndicatorsArray,
+      canCheckAnomaly,
+      handleAnomalyTrainFile,
+      trainAnomalyModel,
+      handleAnomalyCheckFile,
+      checkAnomaly,
+      renderAnomalyScoreGauge,
+      renderComparisonRadarChart,
+      // Survival Analysis - NEW FEATURE
+      survivalInputMode,
+      survivalXlsxFile,
+      survivalXlsxFileName,
+      manualSurvivalIndicators,
+      isSurvivalAnalyzing,
+      survivalResult,
+      survivalChartContainer,
+      isSurvivalGeminiAnalyzing,
+      survivalGeminiAnalysis,
+      isExportingSurvivalReport,
+      showSurvivalChatbot,
+      survivalChatMessages,
+      survivalChatInput,
+      isSurvivalChatLoading,
+      isManualSurvivalValid,
+      showSurvivalIndicators,
+      survivalIndicatorsArray,
+      // Survival Training
+      survivalTrainFile,
+      survivalTrainFileName,
+      isSurvivalTraining,
+      survivalTrainResult,
+      handleSurvivalTrainFile,
+      trainSurvivalModel,
+      // Survival Prediction
+      handleSurvivalXlsxFile,
+      analyzeSurvival,
+      renderSurvivalChart,
+      getSurvivalGeminiAnalysis,
+      exportSurvivalReport,
+      openSurvivalChatbot,
+      closeSurvivalChatbot,
+      sendSurvivalChatMessage
+    }
+  }
+}
+</script>
+
+<style scoped>
+/* ====================================
+   TRAINING TAB DROPDOWN STYLES
+   ==================================== */
+.tab-button-wrapper {
+  position: relative;
+  display: inline-block;
+  flex: 0 1 auto;
+  min-width: 180px;
+  max-width: 230px;
+}
+
+.tab-button-wrapper .tab-button {
+  width: 100%;
+}
+
+.train-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 220px;
+  background: white;
+  border: 2px solid #FF6B9D;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(255, 107, 157, 0.25);
+  z-index: 1000;
+  margin-top: 0.5rem;
+  overflow: hidden;
+  animation: dropdown-fade-in 0.2s ease;
+}
+
+@keyframes dropdown-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  padding: 0.8rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  color: #333;
+  border-bottom: 1px solid #FFE4EC;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(135deg, #FFF5F7 0%, #FFE4EC 100%);
+  color: #FF6B9D;
+  padding-left: 1.5rem;
+}
+
+/* ====================================
+   TRAINING SUB-TABS STYLES
+   ==================================== */
+.training-subtabs-container {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #FFF5F7 0%, #FFE4EC 100%);
+  border-radius: 14px;
+  flex-wrap: wrap;
+}
+
+.training-subtab-btn {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.9rem 1.2rem;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: white;
+  color: #666;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.training-subtab-btn:hover {
+  background: linear-gradient(135deg, #FFF5F7 0%, #FFE4EC 100%);
+  color: #FF6B9D;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 157, 0.2);
+}
+
+.training-subtab-btn.active {
+  background: linear-gradient(135deg, #FF6B9D 0%, #FF8FAB 100%);
+  color: white;
+  border-color: #FF6B9D;
+  box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+  transform: translateY(-2px);
+}
+
+/* ====================================
+   TRAINING SUB-TAB CONTENT STYLES
+   ==================================== */
+.training-subtab-content {
+  padding: 2rem;
+  border-radius: 16px;
+  animation: subtab-fade-in 0.3s ease;
+}
+
+@keyframes subtab-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ====================================
+   TRAINING GUIDE STYLES
+   ==================================== */
+.training-guide {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.2rem;
+  background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+  border-left: 4px solid #4CAF50;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.15);
+}
+
+.guide-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.guide-text {
+  flex: 1;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #2E7D32;
+}
+
+.guide-text strong {
+  color: #1B5E20;
+  font-weight: 700;
+}
+
+/* ====================================
+   MODEL DESCRIPTION STYLES
+   ==================================== */
+.model-description-section {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 255, 0.98) 100%);
+  padding: 2rem;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 107, 157, 0.2);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.model-info-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.model-info-card h4 {
+  color: #FF6B9D;
+  font-size: 1.1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.8rem;
+  font-weight: 700;
+}
+
+.model-info-card h4:first-child {
+  margin-top: 0;
+}
+
+.model-info-card ul,
+.model-info-card ol {
+  line-height: 1.8;
+  color: #555;
+}
+
+.model-info-card li {
+  margin-bottom: 0.5rem;
+}
+
+.model-info-card p {
+  line-height: 1.7;
+  color: #666;
+}
+
+.model-info-card strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* ====================================
+   RESPONSIVE STYLES
+   ==================================== */
+@media (max-width: 768px) {
+  .training-subtabs-container {
+    flex-direction: column;
+  }
+
+  .training-subtab-btn {
+    min-width: 100%;
+  }
+
+  .train-dropdown {
+    left: 0;
+    right: 0;
+    width: 100%;
+  }
+}
+
+/* ====================================
+   AUTHORS TAB STYLES - PASTEL & DREAMY
+   ==================================== */
+.authors-card {
+  background: linear-gradient(135deg, #FFF5F7 0%, #FFE4EC 25%, #E8F5E9 50%, #FFF9E6 75%, #F3E5F5 100%);
+  background-size: 400% 400%;
+  animation: gradient-shift 10s ease infinite;
+  box-shadow: 0 8px 32px rgba(255, 107, 157, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.authors-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  animation: sparkle 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: rotate(180deg) scale(1.2);
+    opacity: 0.6;
+  }
+}
+
+.members-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  margin-top: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.member-card {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 2.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  padding: 2.5rem;
+  box-shadow: 0 8px 32px rgba(255, 107, 157, 0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  border: 3px solid transparent;
+}
+
+/* Màu sắc pastel ngọt ngào cho từng thành viên */
+.member-card-pink {
+  background: linear-gradient(135deg, #FFF0F5 0%, #FFE4E9 100%);
+  border-color: #FFB6C1;
+}
+
+.member-card-blue {
+  background: linear-gradient(135deg, #F0F8FF 0%, #E6F3FF 100%);
+  border-color: #B0D4F1;
+}
+
+.member-card-lavender {
+  background: linear-gradient(135deg, #F8F0FF 0%, #F0E6FF 100%);
+  border-color: #D4C5F9;
+}
+
+.member-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #FF6B9D, #FFB6C1, #E8F5E9, #FFF9E6, #F3E5F5);
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+
+.member-card-pink::before {
+  background: linear-gradient(90deg, #FFB6C1, #FF69B4, #FFB6C1, #FFC0CB);
+}
+
+.member-card-blue::before {
+  background: linear-gradient(90deg, #87CEEB, #4FC3F7, #87CEEB, #B0E0E6);
+}
+
+.member-card-lavender::before {
+  background: linear-gradient(90deg, #DDA0DD, #BA68C8, #DDA0DD, #E1BEE7);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Hiệu ứng lung linh cho highlight-card */
+.highlight-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: highlight-shine 3s ease-in-out infinite;
+}
+
+@keyframes highlight-shine {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+.highlight-card {
+  animation: highlight-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes highlight-glow {
+  0% {
+    box-shadow: 0 8px 32px rgba(156, 39, 176, 0.3), 0 0 20px rgba(156, 39, 176, 0.2);
+  }
+  100% {
+    box-shadow: 0 12px 40px rgba(156, 39, 176, 0.5), 0 0 40px rgba(156, 39, 176, 0.4);
+  }
+}
+
+.member-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 60px rgba(255, 107, 157, 0.35);
+}
+
+.member-card-pink:hover {
+  box-shadow: 0 20px 60px rgba(255, 105, 180, 0.4);
+}
+
+.member-card-blue:hover {
+  box-shadow: 0 20px 60px rgba(79, 195, 247, 0.4);
+}
+
+.member-card-lavender:hover {
+  box-shadow: 0 20px 60px rgba(186, 104, 200, 0.4);
+}
+
+.member-card:hover::before {
+  height: 6px;
+}
+
+.member-image-wrapper {
+  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-image {
+  width: 220px;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 6px solid #fff;
+  box-shadow: 0 12px 32px rgba(255, 107, 157, 0.3);
+  transition: all 0.4s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.member-card-pink .member-image {
+  border-color: #FFE4E9;
+  box-shadow: 0 12px 32px rgba(255, 182, 193, 0.4);
+}
+
+.member-card-blue .member-image {
+  border-color: #E6F3FF;
+  box-shadow: 0 12px 32px rgba(176, 212, 241, 0.4);
+}
+
+.member-card-lavender .member-image {
+  border-color: #F0E6FF;
+  box-shadow: 0 12px 32px rgba(212, 197, 249, 0.4);
+}
+
+.member-image-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF6B9D, #FFB6C1, #E8F5E9);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+
+.member-card-pink .member-image-wrapper::before {
+  background: linear-gradient(135deg, #FFB6C1, #FF69B4, #FFC0CB);
+}
+
+.member-card-blue .member-image-wrapper::before {
+  background: linear-gradient(135deg, #87CEEB, #4FC3F7, #B0E0E6);
+}
+
+.member-card-lavender .member-image-wrapper::before {
+  background: linear-gradient(135deg, #DDA0DD, #BA68C8, #E1BEE7);
+}
+
+.member-card:hover .member-image-wrapper::before {
+  opacity: 0.3;
+}
+
+.member-card:hover .member-image {
+  transform: scale(1.08);
+}
+
+.member-card-pink:hover .member-image {
+  box-shadow: 0 16px 40px rgba(255, 182, 193, 0.5);
+}
+
+.member-card-blue:hover .member-image {
+  box-shadow: 0 16px 40px rgba(176, 212, 241, 0.5);
+}
+
+.member-card-lavender:hover .member-image {
+  box-shadow: 0 16px 40px rgba(212, 197, 249, 0.5);
+}
+
+@keyframes pulse-ring {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+.member-info {
+  flex: 1;
+  text-align: left;
+}
+
+.member-name {
+  color: #FF6B9D;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-align: left;
+  position: relative;
+  padding-bottom: 0.8rem;
+}
+
+.member-card-pink .member-name {
+  color: #FF69B4;
+}
+
+.member-card-blue .member-name {
+  color: #4FC3F7;
+}
+
+.member-card-lavender .member-name {
+  color: #BA68C8;
+}
+
+.member-name::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #FF6B9D, #FFB6C1);
+  border-radius: 2px;
+}
+
+.member-card-pink .member-name::after {
+  background: linear-gradient(90deg, #FF69B4, #FFB6C1);
+}
+
+.member-card-blue .member-name::after {
+  background: linear-gradient(90deg, #4FC3F7, #87CEEB);
+}
+
+.member-card-lavender .member-name::after {
+  background: linear-gradient(90deg, #BA68C8, #DDA0DD);
+}
+
+.member-position,
+.member-unit {
+  color: #555;
+  margin-bottom: 0.8rem;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.member-role-title {
+  color: #FF6B9D;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.member-card-pink .member-role-title {
+  color: #FF69B4;
+}
+
+.member-card-blue .member-role-title {
+  color: #4FC3F7;
+}
+
+.member-card-lavender .member-role-title {
+  color: #BA68C8;
+}
+
+.member-roles {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.member-roles li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.6rem;
+  color: #555;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+.member-roles li::before {
+  content: '✨';
+  position: absolute;
+  left: 0;
+  color: #FF6B9D;
+  font-size: 0.9rem;
+}
+
+/* Hiệu ứng lung linh khi hover */
+.member-card:hover .member-roles li::before {
+  animation: twinkle 1s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+  .members-container {
+    grid-template-columns: 1fr;
+  }
+
+  .member-image {
+    width: 150px;
+    height: 150px;
+  }
+
+  .member-image-wrapper::before {
+    width: 170px;
+    height: 170px;
+  }
+}
+</style>
